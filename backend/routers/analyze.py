@@ -9,6 +9,7 @@ from typing import List, Optional
 from schemas.company import CompanyProfile
 from schemas.prediction import PredictionRequest, PredictionResponse
 from schemas.report import ReportRequest, ReportResponse
+from schemas.signal import Signal
 from services.k2_service import get_prediction
 from services.hermes_service import get_report
 from services.mongo_service import fetch_signals
@@ -25,6 +26,7 @@ class AnalyzeRequest(BaseModel):
 
 
 class AnalyzeResponse(BaseModel):
+    signals: List[dict]
     signals_used: int
     prediction: PredictionResponse
     report: ReportResponse
@@ -60,6 +62,7 @@ async def analyze(req: AnalyzeRequest):
     ))
 
     return AnalyzeResponse(
+        signals=[{k: v for k, v in s.items() if k not in ("embedding",)} for s in signals],
         signals_used=len(signals),
         prediction=prediction,
         report=report,
