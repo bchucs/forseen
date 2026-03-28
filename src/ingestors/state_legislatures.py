@@ -13,12 +13,24 @@ LEGISCAN_API_KEY = os.getenv("LEGISCAN_API_KEY")
 LEGISCAN_BASE = "https://api.legiscan.com/"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
 
+ALL_STATES = [
+    "CA", "NY", "TX", "FL", "WA", "CO", "IL", "VA", "CT", "MA",
+    "NJ", "OR", "MT", "NH", "IN", "TN", "GA", "NC", "MN", "AZ",
+    "AL", "AK", "AR", "DE", "HI", "ID", "IA", "KS", "KY", "LA",
+    "ME", "MD", "MI", "MS", "MO", "NE", "NV", "NM", "ND", "OH",
+    "OK", "PA", "RI", "SC", "SD", "UT", "VT", "WV", "WI", "WY",
+    "DC"
+]
+
 SEARCH_TERMS = [
     "health data privacy",
     "artificial intelligence",
     "patient data",
     "consumer data protection",
     "HIPAA",
+    "health information",
+    "medical records",
+    "data breach",
 ]
 
 TOPIC_KEYWORDS = {
@@ -42,7 +54,8 @@ def is_relevant(title, summary):
     keywords = [
         "health", "privacy", "data", "artificial intelligence", "ai",
         "patient", "medical", "algorithm", "security", "telehealth",
-        "consumer protection", "information technology", "digital"
+        "consumer protection", "information technology", "digital",
+        "breach", "records", "hipaa"
     ]
     return any(kw in text for kw in keywords)
 
@@ -61,12 +74,10 @@ def fetch_legiscan_state(state):
             }
             r = requests.get(LEGISCAN_BASE, params=params, headers=HEADERS, timeout=15)
             if r.status_code != 200:
-                print(f"  Error {r.status_code} for {state} '{term}'")
                 continue
 
             data = r.json()
             if data.get("status") != "OK":
-                print(f"  API error for {state} '{term}': {data.get('status')}")
                 continue
 
             results = data.get("searchresult", {})
@@ -128,22 +139,21 @@ def fetch_legiscan_state(state):
                         upsert=True
                     )
                     inserted += 1
-                except Exception as e:
+                except Exception:
                     pass
 
         except Exception as e:
-            print(f"  Exception for {state} '{term}': {e}")
+            pass
 
     return inserted
 
-def fetch_state_legislatures():
-    states = ["CA", "NY", "TX", "FL"]
+def fetch_state_legislatures(states=None):
+    target_states = states or ALL_STATES
     total_inserted = 0
 
-    for state in states:
-        print(f"Fetching: {state}")
+    for state in target_states:
         count = fetch_legiscan_state(state)
-        print(f"  {count} signals inserted")
+        print(f"  {state}: {count} signals")
         total_inserted += count
 
     print(f"\nState legislatures done: {total_inserted} upserted")
