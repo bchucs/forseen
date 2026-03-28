@@ -8,7 +8,6 @@ from sentence_transformers import SentenceTransformer
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
-import numpy as np
 
 load_dotenv()
 
@@ -73,102 +72,57 @@ def embed_signals(batch_size=256):
     print(f"\nEmbedding complete: {total_embedded} signals embedded")
     return total_embedded
 
-def semantic_search(query_text, top_k=20, filters=None):
+def semantic_search(query_text, top_k=20, jurisdictions=None):
     """
-    Find the most semantically similar signals to a query.
-    Used by P2 to retrieve top-k signals for a company description.
-
-    Example:
-        results = semantic_search(
-            "healthcare SaaS using AI for clinical decision support, processes PHI",
-            top_k=20,
-            filters={"jurisdiction": {"$in": ["federal", "CA", "NY", "TX", "FL"]}}
-        )
+    Find the most semantically similar signals using Atlas $vectorSearch.
+    Fetches extra candidates and post-filters by jurisdiction.
     """
-    print(f"Loading model for search...")
     model = SentenceTransformer(MODEL_NAME)
+    query_vector = model.encode([query_text], normalize_embeddings=True)[0].tolist()
 
-    query_embedding = model.encode([query_text])[0]
-    query_vec = np.array(query_embedding)
+    num_candidates = top_k * 10
 
-    # build mongo query
-    mongo_query = {"embedding": {"$exists": True, "$ne": None}}
-    if filters:
-        mongo_query.update(filters)
+    pipeline = [
+        {
+            "$vectorSearch": {
+                "index": "signal_embedding_index",
+                "path": "embedding",
+                "queryVector": query_vector,
+                "numCandidates": num_candidates,
+                "limit": num_candidates,
+            }
+        },
+        {
+            "$project": {
+                "embedding": 0,
+                "score": {"$meta": "vectorSearchScore"},
+            }
+        },
+    ]
 
-    # fetch all candidate signals with embeddings
-    candidates = list(signals.find(
-        mongo_query,
-        {"_id": 0, "title": 1, "summary": 1, "source_url": 1,
-         "signal_type": 1, "jurisdiction": 1, "agency": 1,
-         "signal_score": 1, "published_date": 1, "topics": 1,
-         "embedding": 1}
-    ))
-
-    if not candidates:
-        return []
-
-    # compute cosine similarity
-    scored = []
-    for doc in candidates:
-        emb = doc.get("embedding")
-        if not emb:
+    results = []
+    for doc in signals.aggregate(pipeline):
+        if jurisdictions and doc.get("jurisdiction") not in jurisdictions:
             continue
-        doc_vec = np.array(emb)
-        cosine_sim = float(np.dot(query_vec, doc_vec) / (np.linalg.norm(query_vec) * np.linalg.norm(doc_vec) + 1e-10))
-        doc_copy = {k: v for k, v in doc.items() if k != "embedding"}
-        doc_copy["similarity_score"] = round(cosine_sim, 4)
-        scored.append(doc_copy)
+        doc["similarity_score"] = round(doc.pop("score", 0), 4)
+        results.append(doc)
+        if len(results) >= top_k:
+            break
 
-    # sort by similarity and return top k
-    scored.sort(key=lambda x: x["similarity_score"], reverse=True)
-    return scored[:top_k]
-
-def search_by_company(company_id="demo_company_001", top_k=20):
-    """
-    Retrieve top-k signals most relevant to a company profile.
-    This is what P2 feeds into K2 for prediction generation.
-    """
-    company = db["companies"].find_one({"company_id": company_id})
-    if not company:
-        print(f"Company {company_id} not found")
-        return []
-
-    # build company description from profile
-    name = company.get("name", "")
-    industry = company.get("industry", {}).get("primary", "")
-    ai_desc = company.get("business_model", {}).get("ai_description", "")
-    data_handling = " ".join(company.get("business_model", {}).get("data_handling", []))
-    concerns = " ".join(company.get("risk_profile", {}).get("key_concerns", []))
-    states = " ".join(company.get("jurisdictions", {}).get("operating_states", []))
-
-    query = f"{name} {industry} {ai_desc} {data_handling} {concerns} {states}"
-
-    # filter to relevant jurisdictions
-    operating_states = company.get("jurisdictions", {}).get("operating_states", [])
-    jurisdictions = operating_states + ["federal"]
-
-    return semantic_search(
-        query_text=query,
-        top_k=top_k,
-        filters={"jurisdiction": {"$in": jurisdictions}}
-    )
+    return results
 
 if __name__ == "__main__":
     import sys
 
     if "--search" in sys.argv:
-        # test semantic search
-        print("\nTesting semantic search for demo company...")
-        results = search_by_company(top_k=10)
-        print(f"\nTop 10 signals for HealthBridge AI:")
+        print("\nTesting vector search...")
+        results = semantic_search(
+            "healthcare SaaS AI clinical decision support PHI privacy",
+            top_k=10,
+            jurisdictions=["federal", "CA", "NY", "TX", "FL"],
+        )
+        print(f"\nTop {len(results)} signals:")
         for r in results:
             print(f"  [{r['similarity_score']}] [{r['jurisdiction']}] {r['title'][:70]}")
     else:
-        # run full embedding
         embed_signals(batch_size=256)
-        print("\nNow testing semantic search...")
-        results = search_by_company(top_k=5)
-        print(f"\nTop 5 signals for HealthBridge AI:")
-        for r in results:
-            print(f"  [{r['similarity_score']}] [{r['jurisdiction']}] {r['title'][:70]}")
