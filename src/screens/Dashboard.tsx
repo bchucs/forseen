@@ -69,7 +69,7 @@ export function Dashboard() {
             <p className="text-xs font-light uppercase tracking-wider text-neutral-500">Company profile</p>
             <h1 className="text-xl font-light tracking-tight text-neutral-800">{company.name}</h1>
             <p className="text-sm text-neutral-600">
-              {company.industry} · {company.employees} employees · {company.states.join(', ')}
+              {company.industry} · {company.size} employees · {company.operating_states.join(', ')}
             </p>
             {company.description.trim() ? (
               <p className="text-sm leading-snug text-neutral-700">{company.description.trim()}</p>
@@ -90,15 +90,31 @@ export function Dashboard() {
               className="border-t border-neutral-200/60"
             >
               <div className="space-y-3 p-6 pt-4 md:p-7 md:pt-4">
+                <p className="text-sm text-neutral-600">
+                  {company.legal_structure} · HQ {company.location}
+                  {company.revenue_range ? ` · ${company.revenue_range}` : ''}
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {company.concerns.map((c) => (
+                  {company.certifications.map((c) => (
                     <Badge key={c} variant="outline" className="font-normal">
                       {c}
                     </Badge>
                   ))}
+                  {company.handles_phi && (
+                    <Badge variant="secondary" className="font-normal">
+                      PHI
+                    </Badge>
+                  )}
+                  {company.handles_pii && (
+                    <Badge variant="secondary" className="font-normal">
+                      PII
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-sm text-neutral-600">
-                  Data types: {company.dataTypes.join(', ')}. Model usage: {company.usesModels ? 'Yes' : 'No'}.
+                  AI/ML: {company.uses_ai_ml ? 'Yes' : 'No'} · {company.b2b ? 'B2B' : 'B2C'}
+                  {company.funding_stage ? ` · ${company.funding_stage}` : ''}
+                  {company.is_public ? ' · Public' : ''}
                 </p>
                 <Button variant="accent" size="sm" onClick={() => setActiveView('setup')}>
                   Edit in Setup

@@ -52,7 +52,7 @@ export function DrillDownModal({ open, predictionId, onOpenChange }: Props) {
 
           <Accordion type="multiple" defaultValue={['k2', 'signals', 'counter', 'prep']} className="w-full">
             <AccordionItem value="k2">
-              <AccordionTrigger>K2 reasoning</AccordionTrigger>
+              <AccordionTrigger>K2 Think v2 model reasoning</AccordionTrigger>
               <AccordionContent>
                 <p className="leading-relaxed text-neutral-700">{detail.k2Reasoning}</p>
                 <Button

@@ -2,16 +2,44 @@ export type Confidence = 'High' | 'Medium' | 'Low'
 export type Priority = 'High' | 'Med' | 'Low'
 export type Effort = 'Low' | 'Med' | 'High'
 
+/** Mirrors backend `CompanyProfile` (Pydantic) */
+export type LegalStructure = 'LLC' | 'C-Corp' | 'S-Corp' | 'Sole Proprietorship' | 'Partnership' | 'Nonprofit'
+
+export const LEGAL_STRUCTURES: LegalStructure[] = [
+  'LLC',
+  'C-Corp',
+  'S-Corp',
+  'Sole Proprietorship',
+  'Partnership',
+  'Nonprofit',
+]
+
+export const REVENUE_RANGES = ['<$1M', '$1M-$10M', '$10M-$50M', '$50M+'] as const
+export const FUNDING_STAGES = ['Bootstrapped', 'Pre-seed', 'Seed', 'Series A', 'Series B', 'Series C', 'Public'] as const
+export const CERTIFICATION_OPTIONS = ['HIPAA', 'SOC2', 'ISO27001', 'PCI-DSS'] as const
+export const INDUSTRY_OPTIONS = ['Healthcare SaaS', 'FinTech', 'EdTech', 'Manufacturing', 'Retail', 'Other'] as const
+
 export interface Company {
   name: string
-  /** Short free-text description of what the company does */
-  description: string
+  legal_structure: LegalStructure
   industry: string
-  employees: number
-  states: string[]
-  dataTypes: string[]
-  usesModels: boolean
-  concerns: string[]
+  size: number
+  revenue_range: string | null
+  location: string
+  operating_states: string[]
+  operating_countries: string[]
+  description: string
+  handles_pii: boolean
+  handles_phi: boolean
+  handles_financial_data: boolean
+  uses_ai_ml: boolean
+  b2b: boolean
+  customer_count: number | null
+  certifications: string[]
+  has_legal_counsel: boolean
+  has_compliance_team: boolean
+  funding_stage: string | null
+  is_public: boolean
 }
 
 export interface Prediction {
@@ -78,14 +106,26 @@ export interface FeedbackEntry {
 
 export const defaultCompany: Company = {
   name: 'DemoHealth AI',
+  legal_structure: 'LLC',
+  industry: 'Healthcare SaaS',
+  size: 50,
+  revenue_range: '$1M-$10M',
+  location: 'San Francisco, CA',
+  operating_states: ['CA', 'NY', 'TX', 'FL'],
+  operating_countries: ['US'],
   description:
     'We build AI-assisted clinical software for care teams, with HIPAA-aligned workflows across CA, NY, TX, and FL.',
-  industry: 'Healthcare SaaS',
-  employees: 50,
-  states: ['CA', 'NY', 'TX', 'FL'],
-  dataTypes: ['PHI', 'PII', 'AI outputs'],
-  usesModels: true,
-  concerns: ['HIPAA', 'PHI handling', 'AI governance'],
+  handles_pii: true,
+  handles_phi: true,
+  handles_financial_data: false,
+  uses_ai_ml: true,
+  b2b: true,
+  customer_count: null,
+  certifications: ['HIPAA'],
+  has_legal_counsel: true,
+  has_compliance_team: true,
+  funding_stage: 'Series A',
+  is_public: false,
 }
 
 export const mocks = {

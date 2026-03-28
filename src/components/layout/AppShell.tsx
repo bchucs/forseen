@@ -117,7 +117,12 @@ export function AppShell() {
     )
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[color:var(--color-page)] text-neutral-800">
+    <div
+      className={cn(
+        'flex min-h-dvh flex-col bg-[color:var(--color-page)] text-neutral-800',
+        activeView === 'setup' && 'h-dvh overflow-hidden',
+      )}
+    >
       <Toaster position="top-center" richColors closeButton />
 
       {/* Desktop sidebar — fixed full viewport height */}
@@ -170,6 +175,7 @@ export function AppShell() {
         className={cn(
           'flex min-w-0 flex-1 flex-col transition-[margin] duration-200 ease-out',
           sidebarCollapsed ? 'md:ml-14' : 'md:ml-56',
+          activeView === 'setup' && 'min-h-0 overflow-hidden',
         )}
       >
         <header className="sticky top-0 z-40 border-b border-neutral-200/50 bg-[color:var(--color-elevated)]">
@@ -189,7 +195,7 @@ export function AppShell() {
                   <div className="hidden text-left sm:block">
                     <p className="truncate text-sm font-light text-neutral-800">{company.name}</p>
                     <p className="truncate text-[11px] text-neutral-500">
-                      {company.industry} · {company.states.join(', ')}
+                      {company.industry} · {company.operating_states.join(', ')}
                     </p>
                   </div>
                 </div>
@@ -218,7 +224,14 @@ export function AppShell() {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 px-4 py-6 pb-32 md:px-8 md:py-8 md:pb-8">
+        <main
+          className={cn(
+            'min-w-0 flex-1',
+            activeView === 'setup'
+              ? 'flex min-h-0 flex-col overflow-hidden px-5 py-4 pb-2 md:px-10 md:py-5 md:pb-3 lg:px-14'
+              : 'px-4 py-6 pb-32 md:px-8 md:py-8 md:pb-8',
+          )}
+        >
           {activeView === 'rag' ? (
             <RagChatScreen />
           ) : activeView === 'setup' ? (
@@ -232,13 +245,18 @@ export function AppShell() {
           )}
         </main>
 
-        <footer className="border-t border-neutral-200/50 bg-[color:var(--color-elevated)] py-4 text-center text-xs text-neutral-500 md:mt-auto">
+        <footer
+          className={cn(
+            'border-t border-neutral-200/50 bg-[color:var(--color-elevated)] py-4 text-center text-xs text-neutral-500 md:mt-auto',
+            activeView === 'setup' && 'hidden',
+          )}
+        >
           Demo Mode — Powered by K2 / Hermes / Hex
         </footer>
       </div>
 
       {/* Mobile bottom nav + social strip (sidebar-style green) */}
-      <div className="sticky bottom-0 z-30 md:hidden">
+      <div className={cn('sticky bottom-0 z-30 md:hidden', activeView === 'setup' && 'hidden')}>
         <nav className="flex overflow-x-auto border-t border-neutral-200/60 bg-[color:var(--color-elevated)] backdrop-blur-sm">
           {nav.map((item) => (
             <button
