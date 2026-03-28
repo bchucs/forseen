@@ -13,6 +13,8 @@ from ingestors.ftc import fetch_ftc
 from ingestors.news import fetch_news
 from ingestors.state_legislatures import fetch_state_legislatures
 from ingestors.federal_agencies import fetch_federal_agencies
+from ingestors.reddit import fetch_reddit
+from ingestors.google_alerts import fetch_google_news
 from pipeline.velocity import compute_velocity
 
 db = MongoClient(os.getenv("MONGODB_URI"))["foreseen"]
@@ -25,25 +27,31 @@ def run_pipeline(days_back=28):
     print(f"Days back: {days_back}")
     print("=" * 50)
 
-    print("\n[1/7] Federal Register")
+    print("\n[1/9] Federal Register")
     fetch_federal_register(days_back=days_back)
 
-    print("\n[2/7] Congress.gov")
+    print("\n[2/9] Congress.gov")
     fetch_congress(days_back=days_back)
 
-    print("\n[3/7] FTC")
+    print("\n[3/9] FTC")
     fetch_ftc()
 
-    print("\n[4/7] News API")
+    print("\n[4/9] News API")
     fetch_news(days_back=days_back)
 
-    print("\n[5/7] State Legislatures (all 50 states)")
+    print("\n[5/9] State Legislatures (all 50 states)")
     fetch_state_legislatures()
 
-    print("\n[6/7] Federal Agencies (FDA, CMS, ONC, NIST, CISA)")
+    print("\n[6/9] Federal Agencies (FDA, CMS, ONC, NIST, CISA)")
     fetch_federal_agencies()
 
-    print("\n[7/7] Signal Velocity")
+    print("\n[7/9] Reddit")
+    fetch_reddit()
+
+    print("\n[8/9] Google News")
+    fetch_google_news()
+
+    print("\n[9/9] Signal Velocity")
     compute_velocity()
 
     end = datetime.now(timezone.utc)
