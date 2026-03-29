@@ -16,7 +16,7 @@ import {
   priorityActionsFromReport,
 } from '@/lib/prediction-mapper'
 
-export type AppView = 'dashboard' | 'rag' | 'setup'
+export type AppView = 'dashboard' | 'rag' | 'setup' | 'analysis'
 
 type PriorityRow = { label: string; level: 'High' | 'Med' | 'Low' }
 
@@ -63,7 +63,7 @@ const defaultPriorityRows: PriorityRow[] = [
 ]
 
 function isAppView(v: unknown): v is AppView {
-  return v === 'dashboard' || v === 'rag' || v === 'setup'
+  return v === 'dashboard' || v === 'rag' || v === 'setup' || v === 'analysis'
 }
 
 function initialFromStorage(): PersistedSession | null {

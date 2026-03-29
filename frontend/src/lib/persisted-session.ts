@@ -2,7 +2,7 @@ import type { Company } from '@/data/mocks'
 import type { AnalyzeResponse } from '@/lib/api'
 
 /** Matches `AppView` in forseen-context (avoid circular imports) */
-export type PersistedAppView = 'dashboard' | 'rag' | 'setup'
+export type PersistedAppView = 'dashboard' | 'rag' | 'setup' | 'analysis'
 
 /** Bump when persisted shape changes so stale data is ignored */
 const SESSION_VERSION = 1

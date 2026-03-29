@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Toaster } from 'sonner'
 
 import { cn } from '@/lib/utils'
 import { IconChevronLeft, IconChevronRight, IconMenu, IconX, LogoGithub } from '@/components/icons'
@@ -8,6 +7,7 @@ import { useForseen, type AppView } from '@/store/forseen-context'
 import { Dashboard } from '@/screens/Dashboard'
 import { RagChatScreen } from '@/screens/RagChatScreen'
 import { SetupScreen } from '@/screens/SetupScreen'
+import { RegulatoryAnalysisScreen } from '@/screens/RegulatoryAnalysisScreen'
 import { DrillDownModal } from '@/components/DrillDownModal'
 
 const SIDEBAR_STORAGE_KEY = 'forseen-sidebar-collapsed'
@@ -103,16 +103,15 @@ export function AppShell() {
     <div
       className={cn(
         'flex min-h-dvh flex-col bg-[color:var(--color-page)] text-neutral-800',
-        activeView === 'setup' && 'h-dvh overflow-hidden',
+        (activeView === 'setup' || activeView === 'analysis') && 'h-dvh overflow-hidden',
       )}
     >
-      <Toaster position="top-center" richColors closeButton />
-
       {/* Desktop sidebar — fixed full viewport height */}
       <aside
         className={cn(
           'fixed left-0 top-0 z-40 hidden h-dvh max-h-dvh flex-col overflow-hidden border-r border-white/10 bg-[color:var(--color-accent)] text-white transition-[width] duration-200 ease-out md:flex',
           sidebarCollapsed ? 'md:w-24' : 'md:w-56',
+          (activeView === 'setup' || activeView === 'analysis') && 'md:hidden',
         )}
       >
         <div
@@ -161,11 +160,11 @@ export function AppShell() {
       <div
         className={cn(
           'flex min-w-0 flex-1 flex-col transition-[margin] duration-200 ease-out',
-          sidebarCollapsed ? 'md:ml-24' : 'md:ml-56',
-          activeView === 'setup' && 'min-h-0 overflow-hidden',
+          (activeView === 'setup' || activeView === 'analysis') ? 'md:ml-0' : sidebarCollapsed ? 'md:ml-24' : 'md:ml-56',
+          (activeView === 'setup' || activeView === 'analysis') && 'min-h-0 overflow-hidden',
         )}
       >
-        <header className="sticky top-0 z-40 border-b border-neutral-200/50 bg-[color:var(--color-elevated)]">
+        <header className={cn('sticky top-0 z-40 border-b border-neutral-200/50 bg-[color:var(--color-elevated)]', (activeView === 'setup' || activeView === 'analysis') && 'hidden')}>
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
               <button
@@ -202,13 +201,17 @@ export function AppShell() {
             'min-w-0 flex-1',
             activeView === 'setup'
               ? 'flex min-h-0 flex-col overflow-hidden px-5 py-4 pb-2 md:px-10 md:py-5 md:pb-3 lg:px-14'
-              : 'px-4 py-6 pb-32 md:px-8 md:py-8 md:pb-8',
+              : activeView === 'analysis'
+                ? 'min-h-0 overflow-y-auto'
+                : 'px-4 py-6 pb-32 md:px-8 md:py-8 md:pb-8',
           )}
         >
           {activeView === 'rag' ? (
             <RagChatScreen />
           ) : activeView === 'setup' ? (
             <SetupScreen />
+          ) : activeView === 'analysis' ? (
+            <RegulatoryAnalysisScreen />
           ) : (
             <div className="mx-auto max-w-7xl">
               {activeView === 'dashboard' && <Dashboard />}
@@ -219,7 +222,7 @@ export function AppShell() {
         <footer
           className={cn(
             'border-t border-neutral-200/50 bg-[color:var(--color-elevated)] py-4 text-center text-xs text-neutral-500 md:mt-auto',
-            activeView === 'setup' && 'hidden',
+            (activeView === 'setup' || activeView === 'analysis') && 'hidden',
           )}
         >
          Powered by K2 / Hermes / Hex
@@ -227,7 +230,7 @@ export function AppShell() {
       </div>
 
       {/* Mobile bottom nav + social strip (sidebar-style green) */}
-      <div className={cn('sticky bottom-0 z-30 md:hidden', activeView === 'setup' && 'hidden')}>
+      <div className={cn('sticky bottom-0 z-30 md:hidden', (activeView === 'setup' || activeView === 'analysis') && 'hidden')}>
         <nav className="flex overflow-x-auto border-t border-neutral-200/60 bg-[color:var(--color-elevated)] backdrop-blur-sm">
           {nav.map((item) => (
             <button
