@@ -6,6 +6,7 @@ __pycache__/
 *.pyo
 
 # Logs
+.logs/
 logs/
 logs
 *.log

@@ -1,0 +1,3 @@
+# Optional: real embeddings (PyTorch + sentence-transformers; large)
+-r requirements.txt
+sentence-transformers>=3.0.0
