@@ -110,7 +110,7 @@ export const defaultCompany: Company = {
   industry: '',
   size: 50,
   revenue_range: '$1M-$10M',
-  location: 'San Francisco, CA',
+  location: '',
   operating_states: [],
   operating_countries: ['US'],
   description: '',

@@ -32,16 +32,36 @@
     color: var(--color-ink);
   }
 
-  /* Identity setup selects: white + dark text (native menu still OS-dependent) */
+  /*
+   * Identity setup selects: match elevated panels + page palette.
+   * Option/hover rules apply where the engine allows (e.g. Firefox, many Windows builds);
+   * macOS native menus may ignore some properties.
+   */
   select#co-legal,
   select#co-ind {
-    background-color: #fff;
-    color: #171717;
+    font-family: inherit;
+    background-color: var(--color-elevated);
+    color: var(--color-ink);
     color-scheme: light;
+    accent-color: var(--color-accent);
   }
+
   select#co-legal option,
   select#co-ind option {
-    background-color: #fff;
-    color: #171717;
+    background-color: var(--color-elevated);
+    color: var(--color-ink);
+    font-weight: 300;
+  }
+
+  select#co-legal option:hover,
+  select#co-ind option:hover,
+  select#co-legal option:focus-visible,
+  select#co-ind option:focus-visible {
+    background-color: var(--color-accent-muted);
+    color: var(--color-accent-foreground);
+  }
+
+  select#co-ind option[value=''] {
+    color: #737373;
   }
 }

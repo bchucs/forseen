@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { toast } from 'sonner'
 import { motion, useInView } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,10 +45,10 @@ function sortStateCodes(codes: string[]) {
 const SELECT_FIELD_CLASS =
   'flex h-11 w-full cursor-pointer rounded-2xl border border-neutral-200/80 bg-[color:var(--color-elevated)] px-4 text-sm text-[color:var(--color-ink)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]/30 focus-visible:border-[color:var(--color-accent)]'
 
-/** Legal + industry setup selects: white field, brand green border / focus */
+/** Legal + industry setup selects: panel + page tokens, brand green border / focus */
 const IDENTITY_SELECT_CLASS = cn(
-  'flex h-11 w-full cursor-pointer rounded-2xl border px-4 text-sm transition-colors',
-  'bg-white text-neutral-900 shadow-sm [color-scheme:light]',
+  'flex h-11 w-full cursor-pointer rounded-2xl border px-4 text-sm font-light tracking-tight transition-colors',
+  'bg-[color:var(--color-elevated)] text-[color:var(--color-ink)] shadow-sm [color-scheme:light]',
   'border-[color:var(--color-accent)]/35 hover:border-[color:var(--color-accent)]/55',
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]/30 focus-visible:border-[color:var(--color-accent)]',
 )
@@ -57,6 +56,13 @@ const IDENTITY_SELECT_CLASS = cn(
 /** Older saves used this as a fallback name — keep the input empty so the placeholder shows. */
 function nameForSetupField(stored: string) {
   return stored === 'Untitled company' ? '' : stored
+}
+
+/** Saved empty location uses em dash — show empty field so the placeholder hint appears. */
+function locationForSetupField(stored: string) {
+  const t = stored.trim()
+  if (t === '' || t === '—') return ''
+  return stored
 }
 
 // Section configuration
@@ -245,7 +251,20 @@ function OperatingStatesField({
       <DialogContent className="flex max-h-[min(90vh,560px)] w-full max-w-md flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
         <DialogHeader className="border-b border-neutral-200/60 px-6 py-4 text-left">
           <DialogTitle>Operating states</DialogTitle>
-          <DialogDescription>Select every state where you operate. You can choose more than one.</DialogDescription>
+          <div className="flex items-start justify-between gap-3">
+            <DialogDescription className="min-w-0 flex-1 pr-1 text-left">
+              Select every state where you operate. Select all that apply. You can choose more than one.
+            </DialogDescription>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="shrink-0"
+              onClick={() => onChange(sortStateCodes([...US_STATE_CODES]))}
+            >
+              Select all
+            </Button>
+          </div>
         </DialogHeader>
         <div className="max-h-[min(52vh,380px)] overflow-y-auto px-3 py-2">
           <ul className="space-y-0.5" role="list">
@@ -433,7 +452,7 @@ export function SetupScreen() {
   const [legalStructure, setLegalStructure] = React.useState<LegalStructure>(company.legal_structure)
   const [industry, setIndustry] = React.useState(company.industry)
   const [description, setDescription] = React.useState(company.description)
-  const [location, setLocation] = React.useState(company.location)
+  const [location, setLocation] = React.useState(() => locationForSetupField(company.location))
   const SIZE_STOPS = [1, 10, 25, 50, 100, 250, 500, 1000] as const
   const toSizeIndex = (val: number) => {
     const idx = SIZE_STOPS.indexOf(val as any)
@@ -459,7 +478,7 @@ export function SetupScreen() {
     setLegalStructure(company.legal_structure)
     setIndustry(company.industry)
     setDescription(company.description)
-    setLocation(company.location)
+    setLocation(locationForSetupField(company.location))
     setSizeIndex([toSizeIndex(company.size)])
     setRevenueRange(company.revenue_range)
     setOperatingStates(company.operating_states)
@@ -547,7 +566,6 @@ export function SetupScreen() {
 
   const saveProfile = () => {
     setCompany(buildCompany())
-    toast.success('Profile saved — demo banner updated')
   }
 
   const handleCompleteSetup = () => {
@@ -729,7 +747,7 @@ export function SetupScreen() {
                 </select>
               </motion.div>
               <motion.div variants={fadeInUp} className="space-y-2.5 md:col-span-2">
-                <Label htmlFor="co-loc">Headquarters (city / state)</Label>
+                <Label htmlFor="co-loc">Headquarters (City, State)</Label>
                 <Input
                   id="co-loc"
                   value={location}

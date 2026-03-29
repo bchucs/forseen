@@ -232,13 +232,7 @@ function ProbabilityCard({
 }
 
 function AnalysisConfigView({ onStart }: { onStart: () => void }) {
-  const {
-    company,
-    riskTopic,
-    setRiskTopic,
-    riskJurisdiction,
-    setRiskJurisdiction,
-  } = useForseen()
+  const { company, riskTopic, setRiskTopic } = useForseen()
 
   return (
     <div className="min-h-screen bg-[color:var(--color-page)] flex items-center justify-center p-6 md:p-8">
@@ -275,25 +269,14 @@ function AnalysisConfigView({ onStart }: { onStart: () => void }) {
               We'll fetch regulatory signals and analyze them against your company profile to predict compliance requirements.
             </p>
 
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="risk-topic">Topic</Label>
-                <Input
-                  id="risk-topic"
-                  value={riskTopic}
-                  onChange={(e) => setRiskTopic(e.target.value)}
-                  placeholder="e.g. State health data privacy"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="risk-jurisdiction">Jurisdiction</Label>
-                <Input
-                  id="risk-jurisdiction"
-                  value={riskJurisdiction}
-                  onChange={(e) => setRiskJurisdiction(e.target.value)}
-                  placeholder="e.g. CA or Federal"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="risk-topic">Topic</Label>
+              <Input
+                id="risk-topic"
+                value={riskTopic}
+                onChange={(e) => setRiskTopic(e.target.value)}
+                placeholder="e.g. State health data privacy"
+              />
             </div>
 
             <div className="mt-6">
@@ -302,7 +285,7 @@ function AnalysisConfigView({ onStart }: { onStart: () => void }) {
                 variant="accent"
                 size="lg"
                 className="w-full gap-2"
-                disabled={!riskTopic.trim() || !riskJurisdiction.trim()}
+                disabled={!riskTopic.trim()}
                 onClick={onStart}
               >
                 Run Analysis
