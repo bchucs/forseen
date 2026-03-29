@@ -31,6 +31,8 @@ model_servers/hermes/  Hermes 4.3 — report & narrative generation (port 8002)
 data_ingestion/    Signal pipelines: ingestors, embeddings, dedup, entity extraction, scoring
 scripts/           Local dev scripts (run, stop, inspect)
 ```
+---
+<img width="11583" height="9728" alt="pipeline" src="https://github.com/user-attachments/assets/ff35d197-2f2b-409e-a584-c8e65aaf41d2" />
 
 ### Analysis flow
 
