@@ -32,24 +32,37 @@ export function apiPredictionToUi(pred: ApiPrediction, id = LIVE_PREDICTION_ID):
   }
 }
 
+function findSourceUrl(signalId: string, signals: Record<string, unknown>[]): string {
+  const needle = signalId.toLowerCase()
+  // Exact match first
+  for (const s of signals) {
+    if (typeof s.title === 'string' && s.title.toLowerCase() === needle) {
+      return s.source_url as string
+    }
+  }
+  // Substring match: signal title contains the id or vice versa
+  for (const s of signals) {
+    if (typeof s.title === 'string') {
+      const hay = s.title.toLowerCase()
+      if (hay.includes(needle) || needle.includes(hay)) {
+        return s.source_url as string
+      }
+    }
+  }
+  return '#'
+}
+
 export function apiPredictionToDetail(
   pred: ApiPrediction,
   signals: Record<string, unknown>[] = [],
 ): PredictionDetail {
-  const urlByTitle = new Map<string, string>()
-  for (const s of signals) {
-    if (typeof s.title === 'string' && typeof s.source_url === 'string') {
-      urlByTitle.set(s.title, s.source_url)
-    }
-  }
-
   return {
     predictionId: LIVE_PREDICTION_ID,
     k2Reasoning: pred.reasoning,
     signals: pred.key_signals.map((ks) => ({
       title: ks.signal_id,
       summary: ks.rationale,
-      sourceUrl: urlByTitle.get(ks.signal_id) ?? '#',
+      sourceUrl: findSourceUrl(ks.signal_id, signals),
       weight: ks.weight.toFixed(2),
     })),
     counterfactors: pred.counterfactors,

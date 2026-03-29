@@ -81,14 +81,16 @@ export function DrillDownModal({ open, predictionId, onOpenChange }: Props) {
                         </Badge>
                       </div>
                       <p className="text-sm text-neutral-600">{s.summary}</p>
-                      <a
-                        href={s.sourceUrl}
-                        className="mt-2 inline-block text-xs font-light text-[color:var(--color-accent)] hover:underline"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Source link
-                      </a>
+                      {s.sourceUrl !== '#' && (
+                        <a
+                          href={s.sourceUrl}
+                          className="mt-2 inline-block text-xs font-light text-[color:var(--color-accent)] hover:underline"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Source link
+                        </a>
+                      )}
                     </div>
                   ))}
                 </div>
