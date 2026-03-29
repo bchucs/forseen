@@ -1,6 +1,8 @@
 # Forseen — project documentation
 
-This folder summarizes how the **YHack-2026 / Forseen** repository is organized. For HTTP details, see [`../backend/API.md`](../backend/API.md).
+The main **GitHub-style** overview (features, install, quick start, API snippet) lives at **[`../README.md`](../README.md)** in the repo root.
+
+This folder is the **deeper technical map** of the codebase. For HTTP details, see [`../backend/API.md`](../backend/API.md).
 
 ## Quick start
 
