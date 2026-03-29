@@ -32,12 +32,14 @@
     color: var(--color-ink);
   }
 
-  /* Industry picker: force light field + options (native menu still OS-dependent) */
+  /* Identity setup selects: white + dark text (native menu still OS-dependent) */
+  select#co-legal,
   select#co-ind {
     background-color: #fff;
     color: #171717;
     color-scheme: light;
   }
+  select#co-legal option,
   select#co-ind option {
     background-color: #fff;
     color: #171717;

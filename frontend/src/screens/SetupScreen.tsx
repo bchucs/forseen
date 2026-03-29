@@ -46,12 +46,18 @@ function sortStateCodes(codes: string[]) {
 const SELECT_FIELD_CLASS =
   'flex h-11 w-full cursor-pointer rounded-2xl border border-neutral-200/80 bg-[color:var(--color-elevated)] px-4 text-sm text-[color:var(--color-ink)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]/30 focus-visible:border-[color:var(--color-accent)]'
 
-/** Industry select: crisp white field + light native menu where supported */
-const INDUSTRY_SELECT_CLASS = cn(
-  SELECT_FIELD_CLASS,
-  'border-neutral-200 bg-white text-neutral-900 shadow-sm',
-  '[color-scheme:light]',
+/** Legal + industry setup selects: white field, brand green border / focus */
+const IDENTITY_SELECT_CLASS = cn(
+  'flex h-11 w-full cursor-pointer rounded-2xl border px-4 text-sm transition-colors',
+  'bg-white text-neutral-900 shadow-sm [color-scheme:light]',
+  'border-[color:var(--color-accent)]/35 hover:border-[color:var(--color-accent)]/55',
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]/30 focus-visible:border-[color:var(--color-accent)]',
 )
+
+/** Older saves used this as a fallback name — keep the input empty so the placeholder shows. */
+function nameForSetupField(stored: string) {
+  return stored === 'Untitled company' ? '' : stored
+}
 
 // Section configuration
 const SECTIONS = [
@@ -423,7 +429,7 @@ export function SetupScreen() {
   }
 
   // Form state
-  const [name, setName] = React.useState(company.name)
+  const [name, setName] = React.useState(() => nameForSetupField(company.name))
   const [legalStructure, setLegalStructure] = React.useState<LegalStructure>(company.legal_structure)
   const [industry, setIndustry] = React.useState(company.industry)
   const [description, setDescription] = React.useState(company.description)
@@ -449,7 +455,7 @@ export function SetupScreen() {
   const [isPublic, setIsPublic] = React.useState(company.is_public)
 
   React.useEffect(() => {
-    setName(company.name)
+    setName(nameForSetupField(company.name))
     setLegalStructure(company.legal_structure)
     setIndustry(company.industry)
     setDescription(company.description)
@@ -516,7 +522,7 @@ export function SetupScreen() {
   const buildCompany = (): Company => {
     const parsed = customerCount.trim() === '' ? null : Number.parseInt(customerCount, 10)
     return {
-      name: name.trim() || 'Untitled company',
+      name: name.trim(),
       legal_structure: legalStructure,
       industry,
       size: SIZE_STOPS[sizeIndex[0]],
@@ -695,7 +701,7 @@ export function SetupScreen() {
                 <Label htmlFor="co-legal">Legal structure</Label>
                 <select
                   id="co-legal"
-                  className={SELECT_FIELD_CLASS}
+                  className={IDENTITY_SELECT_CLASS}
                   value={legalStructure}
                   onChange={(e) => setLegalStructure(e.target.value as LegalStructure)}
                 >
@@ -710,7 +716,7 @@ export function SetupScreen() {
                 <Label htmlFor="co-ind">Industry</Label>
                 <select
                   id="co-ind"
-                  className={INDUSTRY_SELECT_CLASS}
+                  className={IDENTITY_SELECT_CLASS}
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
                 >
