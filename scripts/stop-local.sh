@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOGDIR="$ROOT/.logs"
 
-for p in 8000 8001 8002 5173; do
+for p in 8000 8001 8002 5175; do
   pids=$(lsof -ti tcp:"$p" -sTCP:LISTEN 2>/dev/null || true)
   if [[ -n "${pids}" ]]; then
     echo "Killing port $p: $pids"

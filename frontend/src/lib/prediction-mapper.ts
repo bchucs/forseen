@@ -18,12 +18,13 @@ function tripleRequirements(reqs: string[]): [string, string, string] {
 }
 
 export function apiPredictionToUi(pred: ApiPrediction, id = LIVE_PREDICTION_ID): Prediction {
+  const j = typeof pred.jurisdiction === 'string' ? pred.jurisdiction : ''
   return {
     id,
-    topic: pred.topic,
-    jurisdictions: pred.jurisdiction.includes(',')
-      ? pred.jurisdiction.split(',').map((s) => s.trim()).filter(Boolean)
-      : [pred.jurisdiction],
+    topic: typeof pred.topic === 'string' ? pred.topic : '—',
+    jurisdictions: j.includes(',')
+      ? j.split(',').map((s) => s.trim()).filter(Boolean)
+      : [j || '—'],
     prob6mo: pred.probability_6mo,
     prob12mo: pred.probability_12mo,
     prob24mo: pred.probability_24mo,
@@ -57,19 +58,22 @@ export function apiPredictionToDetail(
   signals: Record<string, unknown>[] = [],
   predictionId: number = LIVE_PREDICTION_ID,
 ): PredictionDetail {
+  const keySignals = Array.isArray(pred.key_signals) ? pred.key_signals : []
+  const prep = Array.isArray(pred.recommended_preparation) ? pred.recommended_preparation : []
+  const counter = Array.isArray(pred.counterfactors) ? pred.counterfactors : []
   return {
     predictionId,
-    k2Reasoning: pred.reasoning,
-    signals: pred.key_signals.map((ks) => ({
-      title: ks.signal_id,
-      summary: ks.rationale,
-      sourceUrl: findSourceUrl(ks.signal_id, signals),
-      weight: ks.weight.toFixed(2),
+    k2Reasoning: typeof pred.reasoning === 'string' ? pred.reasoning : '',
+    signals: keySignals.map((ks) => ({
+      title: typeof ks.signal_id === 'string' ? ks.signal_id : '—',
+      summary: typeof ks.rationale === 'string' ? ks.rationale : '',
+      sourceUrl: findSourceUrl(typeof ks.signal_id === 'string' ? ks.signal_id : '', signals),
+      weight: typeof ks.weight === 'number' ? ks.weight.toFixed(2) : '0.00',
     })),
-    counterfactors: pred.counterfactors,
-    prepActions: pred.recommended_preparation.map((title, i) => ({
+    counterfactors: counter,
+    prepActions: prep.map((title, i) => ({
       step: i + 1,
-      title,
+      title: typeof title === 'string' ? title : '—',
       effort: 'Med' as Effort,
     })),
   }
@@ -78,13 +82,11 @@ export function apiPredictionToDetail(
 export function priorityActionsFromReport(
   actions: { priority: string; action: string; deadline: string; effort: string }[],
 ): { label: string; level: 'High' | 'Med' | 'Low' }[] {
-  return actions.map((a) => ({
-    label: a.action,
-    level:
-      a.priority.toLowerCase() === 'high'
-        ? 'High'
-        : a.priority.toLowerCase() === 'low'
-          ? 'Low'
-          : 'Med',
-  }))
+  return actions.map((a) => {
+    const p = (a.priority ?? '').toLowerCase()
+    return {
+      label: a.action,
+      level: p === 'high' ? 'High' : p === 'low' ? 'Low' : 'Med',
+    }
+  })
 }

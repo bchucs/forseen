@@ -7,6 +7,15 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { useForseen } from '@/store/forseen-context'
 import { IconArrowRight } from '@/components/icons'
@@ -20,12 +29,34 @@ import {
   type LegalStructure,
 } from '@/data/mocks'
 
-const allStates = ['CA', 'NY', 'TX', 'FL', 'WA', 'IL']
+const US_STATE_CODES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+] as const
+
+const STATE_ORDER = new Map<string, number>(US_STATE_CODES.map((c, i) => [c, i]))
+
+function sortStateCodes(codes: string[]) {
+  return [...codes].sort((a, b) => (STATE_ORDER.get(a) ?? 99) - (STATE_ORDER.get(b) ?? 99))
+}
+
+const SELECT_FIELD_CLASS =
+  'flex h-11 w-full cursor-pointer rounded-2xl border border-neutral-200/80 bg-[color:var(--color-elevated)] px-4 text-sm text-[color:var(--color-ink)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]/30 focus-visible:border-[color:var(--color-accent)]'
+
+/** Industry select: crisp white field + light native menu where supported */
+const INDUSTRY_SELECT_CLASS = cn(
+  SELECT_FIELD_CLASS,
+  'border-neutral-200 bg-white text-neutral-900 shadow-sm',
+  '[color-scheme:light]',
+)
 
 // Section configuration
 const SECTIONS = [
   { id: 'hero', label: 'Welcome', icon: null },
-  { id: 'name', label: 'Name', icon: 'building' },
+  { id: 'name', label: 'Name', icon: 'nameTag' },
   { id: 'identity', label: 'Identity', icon: 'identity' },
   { id: 'description', label: 'Description', icon: 'chat' },
   { id: 'scale', label: 'Scale', icon: 'chart' },
@@ -61,6 +92,17 @@ function SectionIcon({ type, className }: { type: string; className?: string }) 
     building: (
       <svg className={cn('size-5', className)} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+      </svg>
+    ),
+    /** Price / name tag — company naming step */
+    nameTag: (
+      <svg className={cn('size-5', className)} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"
+        />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
       </svg>
     ),
     identity: (
@@ -158,12 +200,79 @@ function AnimatedCheckbox({
   )
 }
 
+function OperatingStatesField({
+  value,
+  onChange,
+}: {
+  value: string[]
+  onChange: (next: string[]) => void
+}) {
+  const [open, setOpen] = React.useState(false)
+  const toggle = (code: string) => {
+    onChange(
+      value.includes(code)
+        ? value.filter((x) => x !== code)
+        : sortStateCodes([...value, code]),
+    )
+  }
+  const summary =
+    value.length === 0
+      ? 'Select states'
+      : value.length <= 5
+        ? sortStateCodes(value).join(', ')
+        : `${value.length} states selected`
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          id="co-states-trigger"
+          type="button"
+          className={cn(SELECT_FIELD_CLASS, 'items-center justify-between gap-2 text-left')}
+        >
+          <span className={cn('min-w-0 truncate', value.length === 0 && 'text-neutral-400')}>{summary}</span>
+          <svg className="size-4 shrink-0 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+          </svg>
+        </button>
+      </DialogTrigger>
+      <DialogContent className="flex max-h-[min(90vh,560px)] w-full max-w-md flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+        <DialogHeader className="border-b border-neutral-200/60 px-6 py-4 text-left">
+          <DialogTitle>Operating states</DialogTitle>
+          <DialogDescription>Select every state where you operate. You can choose more than one.</DialogDescription>
+        </DialogHeader>
+        <div className="max-h-[min(52vh,380px)] overflow-y-auto px-3 py-2">
+          <ul className="space-y-0.5" role="list">
+            {US_STATE_CODES.map((code) => (
+              <li key={code}>
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-[color:var(--color-muted-surface)]">
+                  <Checkbox
+                    checked={value.includes(code)}
+                    onCheckedChange={() => toggle(code)}
+                  />
+                  <span className="text-sm text-neutral-800">{code}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <DialogFooter className="border-t border-neutral-200/60 px-6 py-4 sm:justify-stretch">
+          <Button type="button" variant="accent" className="w-full sm:w-auto" onClick={() => setOpen(false)}>
+            Done
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // Section card wrapper with scroll reveal animation
 function SectionCard({
   id,
   title,
   subtitle,
   icon,
+  iconPosition = 'start',
   sectionRef,
   children,
 }: {
@@ -171,6 +280,7 @@ function SectionCard({
   title: string
   subtitle: string
   icon: string | null
+  iconPosition?: 'start' | 'end'
   sectionRef: React.RefObject<HTMLElement | null>
   children: React.ReactNode
 }) {
@@ -186,13 +296,18 @@ function SectionCard({
       className="min-h-[50vh] py-12 px-4 md:py-16"
     >
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
+        <div
+          className={cn(
+            'mb-6 flex items-center gap-3',
+            iconPosition === 'end' && 'flex-row-reverse',
+          )}
+        >
           {icon && (
-            <div className="flex size-10 items-center justify-center rounded-xl bg-[color:var(--color-accent-muted)] text-[color:var(--color-accent)]">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--color-accent-muted)] text-[color:var(--color-accent)]">
               <SectionIcon type={icon} />
             </div>
           )}
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 className="text-xl font-medium text-neutral-800">{title}</h2>
             <p className="text-neutral-500 text-sm">{subtitle}</p>
           </div>
@@ -287,7 +402,7 @@ function MobileProgressBar({
 }
 
 export function SetupScreen() {
-  const { company, setCompany, setActiveView } = useForseen()
+  const { company, setCompany, setActiveView, clearLastAnalyze } = useForseen()
 
   const [activeSection, setActiveSection] = React.useState<SectionId>('hero')
   const [completedSections, setCompletedSections] = React.useState<Set<SectionId>>(new Set())
@@ -394,10 +509,6 @@ export function SetupScreen() {
     setTimeout(() => scrollToSection(nextSection), 100)
   }
 
-  const toggleState = (s: string) => {
-    setOperatingStates((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]))
-  }
-
   const toggleCert = (c: string) => {
     setCertifications((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]))
   }
@@ -411,7 +522,7 @@ export function SetupScreen() {
       size: SIZE_STOPS[sizeIndex[0]],
       revenue_range: revenueRange,
       location: location.trim() || '—',
-      operating_states: operatingStates.length ? operatingStates : ['CA'],
+      operating_states: operatingStates,
       operating_countries: company.operating_countries ?? ['US'],
       description: description.trim(),
       handles_pii: handlesPii,
@@ -435,6 +546,7 @@ export function SetupScreen() {
 
   const handleCompleteSetup = () => {
     saveProfile()
+    clearLastAnalyze()
     setActiveView('analysis')
   }
 
@@ -537,7 +649,7 @@ export function SetupScreen() {
           id="name"
           title="What's your company called?"
           subtitle="We'll personalize your experience"
-          icon="building"
+          icon="nameTag"
           sectionRef={sectionRefs.name}
         >
           <motion.div variants={staggerChildren} initial="initial" animate="animate" className="space-y-6">
@@ -583,7 +695,7 @@ export function SetupScreen() {
                 <Label htmlFor="co-legal">Legal structure</Label>
                 <select
                   id="co-legal"
-                  className="flex h-11 w-full rounded-2xl border border-neutral-200/80 bg-[color:var(--color-elevated)] px-4 text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]/30 focus-visible:border-[color:var(--color-accent)]"
+                  className={SELECT_FIELD_CLASS}
                   value={legalStructure}
                   onChange={(e) => setLegalStructure(e.target.value as LegalStructure)}
                 >
@@ -596,19 +708,19 @@ export function SetupScreen() {
               </motion.div>
               <motion.div variants={fadeInUp} className="space-y-2.5 md:col-span-1">
                 <Label htmlFor="co-ind">Industry</Label>
-                <Input
+                <select
                   id="co-ind"
-                  list="industry-suggestions"
+                  className={INDUSTRY_SELECT_CLASS}
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
-                  placeholder="e.g. Healthcare SaaS, FinTech"
-                  className="transition-all focus-visible:ring-[color:var(--color-accent)]/30 focus-visible:border-[color:var(--color-accent)]"
-                />
-                <datalist id="industry-suggestions">
+                >
+                  <option value="">Select an industry</option>
                   {INDUSTRY_OPTIONS.map((i) => (
-                    <option key={i} value={i} />
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
                   ))}
-                </datalist>
+                </select>
               </motion.div>
               <motion.div variants={fadeInUp} className="space-y-2.5 md:col-span-2">
                 <Label htmlFor="co-loc">Headquarters (city / state)</Label>
@@ -653,9 +765,9 @@ export function SetupScreen() {
                 id="co-desc"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="We provide cloud-based software for managing..."
+                placeholder="e.g. We provide cloud-based software for managing patient scheduling and care coordination."
                 rows={5}
-                className="min-h-[140px] resize-none transition-all focus-visible:ring-[color:var(--color-accent)]/30 focus-visible:border-[color:var(--color-accent)]"
+                className="min-h-[140px] resize-none placeholder:text-neutral-400 transition-all focus-visible:ring-[color:var(--color-accent)]/30 focus-visible:border-[color:var(--color-accent)]"
               />
             </motion.div>
             <motion.div variants={fadeInUp}>
@@ -690,7 +802,7 @@ export function SetupScreen() {
               <Label htmlFor="co-rev">Revenue range</Label>
               <select
                 id="co-rev"
-                className="flex h-11 w-full rounded-2xl border border-neutral-200/80 bg-[color:var(--color-elevated)] px-4 text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]/30 focus-visible:border-[color:var(--color-accent)]"
+                className={SELECT_FIELD_CLASS}
                 value={revenueRange ?? ''}
                 onChange={(e) => setRevenueRange(e.target.value === '' ? null : e.target.value)}
               >
@@ -702,19 +814,9 @@ export function SetupScreen() {
                 ))}
               </select>
             </motion.div>
-            <motion.div variants={fadeInUp}>
-              <p className="mb-3 text-sm font-medium text-neutral-700">Operating states</p>
-              <div className="flex flex-wrap gap-2">
-                {allStates.map((s) => (
-                  <AnimatedChip
-                    key={s}
-                    active={operatingStates.includes(s)}
-                    onClick={() => toggleState(s)}
-                  >
-                    {s}
-                  </AnimatedChip>
-                ))}
-              </div>
+            <motion.div variants={fadeInUp} className="space-y-2.5">
+              <Label htmlFor="co-states-trigger">Operating states</Label>
+              <OperatingStatesField value={operatingStates} onChange={setOperatingStates} />
             </motion.div>
             <motion.div variants={fadeInUp}>
               <Button
@@ -826,7 +928,7 @@ export function SetupScreen() {
               <Label htmlFor="co-fund">Funding stage</Label>
               <select
                 id="co-fund"
-                className="flex h-11 w-full rounded-2xl border border-neutral-200/80 bg-[color:var(--color-elevated)] px-4 text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]/30 focus-visible:border-[color:var(--color-accent)]"
+                className={SELECT_FIELD_CLASS}
                 value={fundingStage ?? ''}
                 onChange={(e) => setFundingStage(e.target.value === '' ? null : e.target.value)}
               >

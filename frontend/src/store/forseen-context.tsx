@@ -2,7 +2,7 @@ import * as React from 'react'
 import { toast } from 'sonner'
 import { defaultCompany, mocks, type Company, type Prediction, type PredictionDetail } from '@/data/mocks'
 import type { AnalyzeResponse } from '@/lib/api'
-import { postAnalyze } from '@/lib/api'
+import { normalizeAnalyzeResponse, postAnalyze } from '@/lib/api'
 import {
   clearAllPersistedForseen,
   loadPersistedSession,
@@ -44,6 +44,8 @@ type ForseenContextValue = {
   lastAnalyze: AnalyzeResponse | null
   analyzeLoading: boolean
   analyzeError: string | null
+  /** Clears cached analysis so the next run shows a fresh chain of reasoning. */
+  clearLastAnalyze: () => void
   runAnalyze: () => Promise<void>
   /** Predictions for dashboard: live row when lastAnalyze is set */
   displayPredictions: Prediction[]
@@ -96,7 +98,9 @@ export function ForseenProvider({ children }: { children: React.ReactNode }) {
   )
   const [riskTopic, setRiskTopic] = React.useState(() => stored?.riskTopic ?? 'State health data privacy')
   const [riskJurisdiction, setRiskJurisdiction] = React.useState(() => stored?.riskJurisdiction ?? 'CA')
-  const [lastAnalyze, setLastAnalyze] = React.useState<AnalyzeResponse | null>(() => stored?.lastAnalyze ?? null)
+  const [lastAnalyze, setLastAnalyze] = React.useState<AnalyzeResponse | null>(() =>
+    normalizeAnalyzeResponse(stored?.lastAnalyze ?? null),
+  )
   const [analyzeLoading, setAnalyzeLoading] = React.useState(false)
   const [analyzeError, setAnalyzeError] = React.useState<string | null>(null)
 
@@ -122,22 +126,23 @@ export function ForseenProvider({ children }: { children: React.ReactNode }) {
     lastAnalyze,
   ])
 
-  // Support both old persisted shape (singular `prediction`) and new (plural `predictions`)
   const analyzePredictions = React.useMemo(() => {
-    if (!lastAnalyze) return []
-    if (lastAnalyze.predictions?.length) return lastAnalyze.predictions
-    const legacy = (lastAnalyze as any).prediction
-    if (legacy) return [legacy]
-    return []
+    if (!lastAnalyze?.predictions?.length) return []
+    return lastAnalyze.predictions
   }, [lastAnalyze])
 
   const liveDetails = React.useMemo(
-    () => analyzePredictions.map((p, i) => apiPredictionToDetail(p, lastAnalyze?.signals ?? [], LIVE_PREDICTION_ID + i)),
+    () =>
+      analyzePredictions.map((p, i) =>
+        apiPredictionToDetail(p, lastAnalyze?.signals ?? [], LIVE_PREDICTION_ID + i),
+      ),
     [analyzePredictions, lastAnalyze],
   )
 
   const displayPredictions = React.useMemo((): Prediction[] => {
-    if (analyzePredictions.length) return analyzePredictions.map((p, i) => apiPredictionToUi(p, LIVE_PREDICTION_ID + i))
+    if (analyzePredictions.length) {
+      return analyzePredictions.map((p, i) => apiPredictionToUi(p, LIVE_PREDICTION_ID + i))
+    }
     return mocks.predictions
   }, [analyzePredictions])
 
@@ -177,12 +182,24 @@ export function ForseenProvider({ children }: { children: React.ReactNode }) {
     }, 900)
   }, [])
 
+  const clearLastAnalyze = React.useCallback(() => {
+    setLastAnalyze(null)
+    setAnalyzeError(null)
+  }, [])
+
   const runAnalyze = React.useCallback(async () => {
     setAnalyzeLoading(true)
     setAnalyzeError(null)
     try {
       const res = await postAnalyze(company, riskTopic, riskJurisdiction)
-      setLastAnalyze(res)
+      const normalized = normalizeAnalyzeResponse(res)
+      if (!normalized) {
+        const msg = 'Invalid analysis response from server'
+        setAnalyzeError(msg)
+        toast.error(msg)
+        return
+      }
+      setLastAnalyze(normalized)
       toast.success('Analysis complete')
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Analysis failed'
@@ -230,6 +247,7 @@ export function ForseenProvider({ children }: { children: React.ReactNode }) {
       lastAnalyze,
       analyzeLoading,
       analyzeError,
+      clearLastAnalyze,
       runAnalyze,
       displayPredictions,
       signalsTrackedCount,
@@ -252,6 +270,7 @@ export function ForseenProvider({ children }: { children: React.ReactNode }) {
       lastAnalyze,
       analyzeLoading,
       analyzeError,
+      clearLastAnalyze,
       runAnalyze,
       displayPredictions,
       signalsTrackedCount,

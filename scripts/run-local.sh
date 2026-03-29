@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start Forseen locally: K2 (8001), Hermes (8002), backend (8000), Vite (5173).
+# Start Forseen locally: K2 (8001), Hermes (8002), backend (8000), Vite (5175).
 # Prereqs: Python 3.11+, Node/npm, MongoDB on localhost:27017 (or we try Docker for Mongo only).
 set -euo pipefail
 
@@ -51,7 +51,7 @@ else
   echo "MongoDB already listening on 27017."
 fi
 
-for p in 8000 8001 8002 5173; do free_port "$p"; done
+for p in 8000 8001 8002 5175; do free_port "$p"; done
 
 run_uvicorn() {
   local dir=$1 port=$2 name=$3
@@ -73,7 +73,7 @@ run_uvicorn "$ROOT/backend" 8000 backend
 
 (
   cd "$ROOT/frontend"
-  exec npm run dev -- --host 127.0.0.1 --port 5173
+  exec npm run dev -- --host 127.0.0.1 --port 5175
 ) >"$LOGDIR/frontend.log" 2>&1 &
 echo $! >"$LOGDIR/frontend.pid"
 echo "Started frontend (pid $(cat "$LOGDIR/frontend.pid")) — logs: $LOGDIR/frontend.log"
@@ -81,7 +81,7 @@ echo "Started frontend (pid $(cat "$LOGDIR/frontend.pid")) — logs: $LOGDIR/fro
 sleep 1
 echo ""
 echo "URLs:"
-echo "  UI:       http://127.0.0.1:5173/"
+echo "  UI:       http://127.0.0.1:5175/"
 echo "  API:      http://127.0.0.1:8000/health"
 echo "  K2:       http://127.0.0.1:8001/health"
 echo "  Hermes:   http://127.0.0.1:8002/health"

@@ -38,6 +38,50 @@ export type AnalyzeResponse = {
   report: ApiReport
 }
 
+const emptyReport = (): ApiReport => ({
+  headline: '',
+  executive_summary: '',
+  priority_actions: [],
+  predictions_used: [],
+})
+
+/** Normalize API / persisted JSON (supports legacy singular `prediction`). */
+export function normalizeAnalyzeResponse(x: unknown): AnalyzeResponse | null {
+  if (!x || typeof x !== 'object') return null
+  const o = x as Record<string, unknown>
+  if (!Array.isArray(o.signals) || typeof o.signals_used !== 'number') return null
+  if (o.report != null && typeof o.report !== 'object') return null
+
+  let predictions: ApiPrediction[] = []
+  if (Array.isArray(o.predictions) && o.predictions.length > 0) {
+    predictions = o.predictions.filter(
+      (p): p is ApiPrediction =>
+        !!p &&
+        typeof p === 'object' &&
+        typeof (p as ApiPrediction).topic === 'string' &&
+        typeof (p as ApiPrediction).jurisdiction === 'string',
+    )
+  }
+  if (predictions.length === 0 && o.prediction && typeof o.prediction === 'object') {
+    const leg = o.prediction as ApiPrediction
+    if (typeof leg.topic === 'string' && typeof leg.jurisdiction === 'string') {
+      predictions = [leg]
+    }
+  }
+  if (predictions.length === 0) return null
+
+  return {
+    signals: o.signals as Record<string, unknown>[],
+    signals_used: o.signals_used as number,
+    predictions,
+    report: (o.report ? (o.report as ApiReport) : emptyReport()) as ApiReport,
+  }
+}
+
+export function isAnalyzeResponse(x: unknown): x is AnalyzeResponse {
+  return normalizeAnalyzeResponse(x) !== null
+}
+
 function companyPayload(company: Company): Record<string, unknown> {
   return {
     name: company.name,

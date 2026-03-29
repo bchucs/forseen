@@ -23,4 +23,23 @@
   body {
     @apply m-0 min-h-dvh;
   }
+  select {
+    color: var(--color-ink);
+    background-color: var(--color-elevated);
+  }
+  select option {
+    background-color: var(--color-elevated);
+    color: var(--color-ink);
+  }
+
+  /* Industry picker: force light field + options (native menu still OS-dependent) */
+  select#co-ind {
+    background-color: #fff;
+    color: #171717;
+    color-scheme: light;
+  }
+  select#co-ind option {
+    background-color: #fff;
+    color: #171717;
+  }
 }

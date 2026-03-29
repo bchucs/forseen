@@ -44,23 +44,34 @@ export function AppShell() {
       {/* Top navbar */}
       <header className={cn('sticky top-0 z-40 shrink-0 border-b border-neutral-200/50 bg-[color:var(--color-elevated)]', activeView === 'analysis' && 'hidden')}>
         <div className="flex items-center gap-4 px-4 py-2.5 md:px-6">
-          {/* Brand */}
-          <div className="min-w-0 shrink-0">
-            <p className="text-sm font-medium tracking-tight text-neutral-800">Forseen</p>
-            <p className="hidden text-[10px] font-light leading-snug text-neutral-500 sm:block">
-              {company.name} · {company.industry}
-            </p>
+          {/* Brand + mark */}
+          <div className="flex min-w-0 shrink-0 items-center gap-2.5">
+            <img
+              src="/forseen-mark.png"
+              alt=""
+              width={36}
+              height={36}
+              className="size-8 shrink-0 object-contain md:size-9"
+              draggable={false}
+            />
+            <div className="min-w-0">
+              <p className="text-sm font-medium tracking-tight text-neutral-800">Forseen</p>
+              <p className="hidden text-[10px] font-light leading-snug text-neutral-500 sm:block">
+                {company.name || 'Your company'}
+                {company.industry ? ` · ${company.industry}` : ''}
+              </p>
+            </div>
           </div>
 
-          {/* Nav tabs */}
-          <nav className="flex items-center gap-1">
+          {/* Nav tabs — offset from brand, slightly larger hit targets */}
+          <nav className="flex shrink-0 items-center gap-1.5 pl-3 sm:pl-6 md:pl-10 md:gap-2">
             {nav.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => onNav(item.id)}
                 className={cn(
-                  'rounded-lg px-3 py-1.5 text-xs font-light transition-colors',
+                  'rounded-lg px-4 py-2 text-sm font-light transition-colors',
                   activeView === item.id
                     ? 'bg-[color:var(--color-accent)] text-white'
                     : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800',
@@ -149,7 +160,9 @@ export function AppShell() {
             </AnimatePresence>
           </div>
         ) : activeView === 'setup' ? (
-          <SetupScreen />
+          <div className="flex min-h-0 flex-1 flex-col">
+            <SetupScreen />
+          </div>
         ) : activeView === 'analysis' ? (
           <RegulatoryAnalysisScreen />
         ) : null}

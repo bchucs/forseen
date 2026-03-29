@@ -11,10 +11,30 @@ import { IconArrowRight } from '@/components/icons'
 
 type AnalysisPhase = 'config' | 'retrieving' | 'predicting' | 'generating' | 'complete'
 
+function formatJurisdictionLabel(j: string) {
+  const t = j.trim()
+  if (t.toLowerCase() === 'federal') return 'Federal'
+  return j
+}
+
+function formatLevelLabel(s: string) {
+  const x = s.trim().toLowerCase()
+  if (x === 'high') return 'High'
+  if (x === 'medium' || x === 'med') return 'Medium'
+  return 'Low'
+}
+
+function priorityLevelTone(p: string): 'high' | 'medium' | 'low' {
+  const x = p.trim().toLowerCase()
+  if (x === 'high') return 'high'
+  if (x === 'low') return 'low'
+  return 'medium'
+}
+
 function JurisdictionBadge({ jurisdiction }: { jurisdiction: string }) {
   return (
     <span className="inline-flex items-center rounded-md bg-[color:var(--color-accent-muted)] px-2 py-0.5 text-xs font-medium text-[color:var(--color-accent)]">
-      {jurisdiction}
+      {formatJurisdictionLabel(jurisdiction)}
     </span>
   )
 }
@@ -64,7 +84,7 @@ function SignalCard({ signal, delay = 0 }: { signal: Record<string, unknown>; de
   const title = stripHtml((signal.title as string) || (signal.name as string) || 'Untitled Document')
   const summary = stripHtml((signal.summary as string) || (signal.content as string) || 'No summary available')
   const sourceUrl = signal.source_url as string | undefined
-  const jurisdiction = (signal.jurisdiction as string) || 'Federal'
+  const jurisdiction = (signal.jurisdiction as string) || 'federal'
 
   return (
     <motion.div
@@ -325,6 +345,7 @@ function StreamingAnalysisView({ shouldRunAnalysis }: { shouldRunAnalysis: boole
   const [apiComplete, setApiComplete] = React.useState(!shouldRunAnalysis && !!lastAnalyze)
   const hasStartedRef = React.useRef(false)
   const hasAnimatedRef = React.useRef(!shouldRunAnalysis && !!lastAnalyze)
+  const documentsSectionRef = React.useRef<HTMLElement | null>(null)
 
   // Start the API call (only once)
   React.useEffect(() => {
@@ -380,6 +401,18 @@ function StreamingAnalysisView({ shouldRunAnalysis }: { shouldRunAnalysis: boole
       return () => clearTimeout(timer)
     }
   }, [apiComplete, lastAnalyze, visibleDocuments])
+
+  const signalCount = lastAnalyze?.signals?.length ?? 0
+
+  React.useEffect(() => {
+    if (!shouldRunAnalysis) return
+    if (phase !== 'complete') return
+    if (!signalCount) return
+    const id = window.setTimeout(() => {
+      documentsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 450)
+    return () => window.clearTimeout(id)
+  }, [phase, shouldRunAnalysis, signalCount])
 
   // Show predictions when prediction phase completes
   React.useEffect(() => {
@@ -514,6 +547,8 @@ function StreamingAnalysisView({ shouldRunAnalysis }: { shouldRunAnalysis: boole
         <AnimatePresence>
           {apiComplete && signals.length > 0 && (
             <motion.section
+              ref={documentsSectionRef}
+              id="retrieved-documents"
               className="mb-10 md:mb-14"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -567,8 +602,15 @@ function StreamingAnalysisView({ shouldRunAnalysis }: { shouldRunAnalysis: boole
                     {/* Topic & Jurisdiction header */}
                     <div className="mb-4 flex flex-wrap items-center gap-3">
                       <h3 className="text-base font-medium text-neutral-800">{pred.topic}</h3>
-                      <Badge variant="secondary" className="text-xs">{pred.jurisdiction}</Badge>
-                      <Badge variant={pred.confidence === 'high' ? 'default' : 'outline'} className="text-xs capitalize">{pred.confidence}</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {formatJurisdictionLabel(pred.jurisdiction)}
+                      </Badge>
+                      <Badge
+                        variant={priorityLevelTone(pred.confidence) === 'high' ? 'default' : 'outline'}
+                        className="text-xs"
+                      >
+                        {formatLevelLabel(pred.confidence)}
+                      </Badge>
                     </div>
 
                     {/* Probability Cards */}
@@ -641,14 +683,14 @@ function StreamingAnalysisView({ shouldRunAnalysis }: { shouldRunAnalysis: boole
                       <span
                         className={cn(
                           'mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium',
-                          action.priority === 'High'
+                          priorityLevelTone(action.priority) === 'high'
                             ? 'bg-red-100 text-red-700'
-                            : action.priority === 'Medium'
+                            : priorityLevelTone(action.priority) === 'medium'
                               ? 'bg-amber-100 text-amber-700'
                               : 'bg-emerald-100 text-emerald-700'
                         )}
                       >
-                        {action.priority}
+                        {formatLevelLabel(action.priority)}
                       </span>
                       <span className="text-sm text-neutral-700">{action.action}</span>
                     </div>

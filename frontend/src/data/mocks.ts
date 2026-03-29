@@ -17,7 +17,28 @@ export const LEGAL_STRUCTURES: LegalStructure[] = [
 export const REVENUE_RANGES = ['<$1M', '$1M-$10M', '$10M-$50M', '$50M+'] as const
 export const FUNDING_STAGES = ['Bootstrapped', 'Pre-seed', 'Seed', 'Series A', 'Series B', 'Series C', 'Public'] as const
 export const CERTIFICATION_OPTIONS = ['HIPAA', 'SOC2', 'ISO27001', 'PCI-DSS'] as const
-export const INDUSTRY_OPTIONS = ['Healthcare SaaS', 'FinTech', 'EdTech', 'Manufacturing', 'Retail', 'Other'] as const
+export const INDUSTRY_OPTIONS = [
+  'Technology',
+  'Healthcare',
+  'Finance',
+  'Retail & E-Commerce',
+  'Real Estate',
+  'Energy',
+  'Manufacturing',
+  'Agriculture',
+  'Transportation & Logistics',
+  'Education',
+  'Media & Entertainment',
+  'Hospitality & Tourism',
+  'Construction',
+  'Legal',
+  'Government & Public Sector',
+  'Telecommunications',
+  'Sports & Fitness',
+  'Fashion & Apparel',
+  'Food & Beverage',
+  'Environmental & Sustainability',
+] as const
 
 export interface Company {
   name: string
@@ -84,16 +105,15 @@ export interface AlertItem {
 }
 
 export const defaultCompany: Company = {
-  name: 'DemoHealth AI',
+  name: '',
   legal_structure: 'LLC',
-  industry: 'Healthcare SaaS',
+  industry: '',
   size: 50,
   revenue_range: '$1M-$10M',
   location: 'San Francisco, CA',
-  operating_states: ['CA', 'NY', 'TX', 'FL'],
+  operating_states: [],
   operating_countries: ['US'],
-  description:
-    'We build AI-assisted clinical software for care teams, with HIPAA-aligned workflows across CA, NY, TX, and FL.',
+  description: '',
   handles_pii: true,
   handles_phi: true,
   handles_financial_data: false,

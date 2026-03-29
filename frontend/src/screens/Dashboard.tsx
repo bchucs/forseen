@@ -70,14 +70,14 @@ export function Dashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-5">
       <motion.section
         layout
         className="overflow-hidden rounded-3xl border border-neutral-200/70 bg-[color:var(--color-elevated)] shadow-none"
       >
         <button
           type="button"
-          className="flex w-full items-start justify-between gap-4 p-6 text-left transition-colors hover:bg-neutral-50/80 md:p-7"
+          className="flex w-full items-start justify-between gap-4 p-5 text-left transition-colors hover:bg-neutral-50/80 md:p-6"
           onClick={() => setExpanded((e) => !e)}
         >
           <div className="min-w-0 space-y-1">
@@ -104,7 +104,7 @@ export function Dashboard() {
               transition={{ duration: 0.25 }}
               className="border-t border-neutral-200/60"
             >
-              <div className="space-y-3 p-6 pt-4 md:p-7 md:pt-4">
+              <div className="space-y-3 p-5 pt-3 md:p-6 md:pt-4">
                 <p className="text-sm text-neutral-600">
                   {company.legal_structure} · HQ {company.location}
                   {company.revenue_range ? ` · ${company.revenue_range}` : ''}
@@ -159,7 +159,7 @@ export function Dashboard() {
       >
         <button
           type="button"
-          className="flex w-full items-start justify-between gap-4 p-6 text-left transition-colors hover:bg-neutral-50/80 md:p-7"
+          className="flex w-full items-start justify-between gap-4 p-5 text-left transition-colors hover:bg-neutral-50/80 md:p-6"
           onClick={() => setPriorityExpanded((e) => !e)}
         >
           <div className="min-w-0 space-y-1">
@@ -180,7 +180,7 @@ export function Dashboard() {
               transition={{ duration: 0.25 }}
               className="border-t border-neutral-200/60"
             >
-              <div className="space-y-3 p-6 pt-4 md:p-7 md:pt-4">
+              <div className="space-y-3 p-5 pt-3 md:p-6 md:pt-4">
                 {priorityRows.map((a, i) => (
                   <label
                     key={a.label}
