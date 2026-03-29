@@ -32,7 +32,18 @@ function chipClass(active: boolean) {
 }
 
 export function SetupScreen() {
-  const { company, setCompany, setActiveView } = useForseen()
+  const {
+    company,
+    setCompany,
+    setActiveView,
+    riskTopic,
+    setRiskTopic,
+    riskJurisdiction,
+    setRiskJurisdiction,
+    runAnalyze,
+    analyzeLoading,
+    analyzeError,
+  } = useForseen()
   const [step, setStep] = React.useState(1)
 
   const [name, setName] = React.useState(company.name)
@@ -436,6 +447,43 @@ export function SetupScreen() {
             <p className="text-center text-xs font-medium uppercase tracking-[0.2em] text-neutral-400 md:text-left">
               Start here
             </p>
+            <div className="rounded-2xl border border-neutral-200/80 bg-[color:var(--color-muted-surface)] p-4 md:p-5">
+              <p className="text-sm font-light text-neutral-800">Regulatory analysis</p>
+              <p className="mt-1 text-xs text-neutral-500">
+                Fetches signals from MongoDB, runs K2 + Hermes, then powers the dashboard and RAG chat with the same context.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="risk-topic">Topic</Label>
+                  <Input
+                    id="risk-topic"
+                    value={riskTopic}
+                    onChange={(e) => setRiskTopic(e.target.value)}
+                    placeholder="e.g. State health data privacy"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="risk-jurisdiction">Jurisdiction</Label>
+                  <Input
+                    id="risk-jurisdiction"
+                    value={riskJurisdiction}
+                    onChange={(e) => setRiskJurisdiction(e.target.value)}
+                    placeholder="e.g. CA or Federal"
+                  />
+                </div>
+              </div>
+              {analyzeError ? <p className="mt-3 text-xs text-red-600">{analyzeError}</p> : null}
+              <div className="mt-4">
+                <Button
+                  type="button"
+                  variant="accent"
+                  disabled={analyzeLoading}
+                  onClick={() => void runAnalyze()}
+                >
+                  {analyzeLoading ? 'Running analysis…' : 'Run regulatory analysis'}
+                </Button>
+              </div>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <button
                 type="button"

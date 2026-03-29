@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { IconX } from '@/components/icons'
-import { mocks, type SignalCard, type PrepAction } from '@/data/mocks'
+import type { SignalCard, PrepAction } from '@/data/mocks'
 import { ProbTimeline } from '@/components/ProbTimeline'
 import { cn } from '@/lib/utils'
+import { useForseen } from '@/store/forseen-context'
 
 type Props = {
   open: boolean
@@ -15,9 +16,9 @@ type Props = {
 }
 
 export function DrillDownModal({ open, predictionId, onOpenChange }: Props) {
-  const prediction = predictionId != null ? mocks.predictions.find((p) => p.id === predictionId) : undefined
-  const detail =
-    predictionId != null ? mocks.predictionDetails[predictionId as keyof typeof mocks.predictionDetails] : undefined
+  const { displayPredictions, getPredictionDetail } = useForseen()
+  const prediction = predictionId != null ? displayPredictions.find((p) => p.id === predictionId) : undefined
+  const detail = predictionId != null ? getPredictionDetail(predictionId) : undefined
 
   if (!prediction || !detail) return null
 

@@ -4,23 +4,63 @@ import { cn } from '@/lib/utils'
 import { IconSend } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { buildCompanyContext, postChat, type ApiChatMessage } from '@/lib/api'
+import { useForseen } from '@/store/forseen-context'
 
 type ChatMessage = { role: 'user' | 'assistant'; text: string }
 
 export function RagChatScreen() {
+  const { company, lastAnalyze } = useForseen()
   const [input, setInput] = React.useState('')
   const [messages, setMessages] = React.useState<ChatMessage[]>([])
+  const [sending, setSending] = React.useState(false)
   const listRef = React.useRef<HTMLDivElement>(null)
 
-  const send = () => {
+  const send = async () => {
     const text = input.trim()
     if (!text) {
       toast.message('Type a message to send')
       return
     }
-    setMessages((m) => [...m, { role: 'user', text }, { role: 'assistant', text: 'Demo mode — connect a RAG backend to answer from your data.' }])
+    const userMsg: ChatMessage = { role: 'user', text }
+    setMessages((m) => [...m, userMsg])
     setInput('')
-    toast.success('Message sent (demo)')
+    setSending(true)
+
+    // Backend passes `history` as prior turns only; current text is `message` (see Hermes /chat).
+    const history: ApiChatMessage[] = messages.map((msg) => ({
+      role: msg.role,
+      content: msg.text,
+    }))
+
+    const signals = lastAnalyze?.signals ?? undefined
+    const predictions = lastAnalyze?.prediction
+      ? [lastAnalyze.prediction as unknown as Record<string, unknown>]
+      : undefined
+    const company_context = buildCompanyContext(company)
+
+    try {
+      const { reply } = await postChat({
+        message: text,
+        history,
+        signals,
+        predictions,
+        company_context,
+      })
+      setMessages((m) => [...m, { role: 'assistant', text: reply }])
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Request failed'
+      toast.error(msg)
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          text: `Could not reach the chat service. ${msg} — check that the API is running (e.g. backend on port 8000).`,
+        },
+      ])
+    } finally {
+      setSending(false)
+    }
   }
 
   React.useEffect(() => {
@@ -32,6 +72,11 @@ export function RagChatScreen() {
       <div className="flex flex-col gap-8 md:gap-10">
         <div className="text-center">
           <h1 className="text-3xl font-light tracking-tight text-neutral-800 md:text-4xl">Ask a question about your knowledge base.</h1>
+          <p className="mt-2 text-sm text-neutral-500">
+            {lastAnalyze
+              ? 'Using signals and predictions from your last regulatory analysis.'
+              : 'Run “Regulatory analysis” from Setup to ground answers on retrieved signals; otherwise the backend still searches live data.'}
+          </p>
         </div>
 
         {messages.length > 0 && (
@@ -56,17 +101,18 @@ export function RagChatScreen() {
         )}
       </div>
 
-      <div className="mt-12 w-full rounded-3xl border border-neutral-200 bg-[color:var(--color-elevated)] p-1 shadow-md md:mt-16">        
+      <div className="mt-12 w-full rounded-3xl border border-neutral-200 bg-[color:var(--color-elevated)] p-1 shadow-md md:mt-16">
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Message Forseen…"
           rows={5}
-          className="min-h-[120px] resize-none border-0 bg-transparent px-4 py-2 text-[15px] shadow-none focus-visible:ring-0"
+          disabled={sending}
+          className="min-h-[120px] resize-none border-0 bg-transparent px-4 py-2 text-[15px] shadow-none focus-visible:ring-0 disabled:opacity-60"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
-              send()
+              void send()
             }
           }}
         />
@@ -74,9 +120,10 @@ export function RagChatScreen() {
           <Button
             type="button"
             size="icon"
-            className="size-10 shrink-0 rounded-xl bg-[color:var(--color-accent)] text-white hover:bg-[color:var(--color-accent-hover)]"
+            disabled={sending}
+            className="size-10 shrink-0 rounded-xl bg-[color:var(--color-accent)] text-white hover:bg-[color:var(--color-accent-hover)] disabled:opacity-50"
             aria-label="Send message"
-            onClick={send}
+            onClick={() => void send()}
           >
             <IconSend className="size-4" aria-hidden />
           </Button>

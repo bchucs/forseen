@@ -6,15 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ProbabilityGauge } from '@/components/ProbabilityGauge'
 import { IconArrowRight, IconChevronDown } from '@/components/icons'
-import { mocks } from '@/data/mocks'
 import { cn } from '@/lib/utils'
 import { useForseen } from '@/store/forseen-context'
-
-const priorityTeaser = [
-  { label: 'Audit data flows across PHI stores', level: 'High' as const },
-  { label: 'Refresh BAAs with audit clauses', level: 'High' as const },
-  { label: 'Publish CDS model cards', level: 'Med' as const },
-]
 
 function confidenceVariant(c: string): 'success' | 'secondary' | 'outline' {
   if (c === 'High') return 'success'
@@ -51,9 +44,22 @@ function MockSourcesCaption() {
 }
 
 export function Dashboard() {
-  const { company, setDrillPredictionId, setActiveView, priorityActionsChecked, togglePriorityAction } = useForseen()
+  const {
+    company,
+    setDrillPredictionId,
+    setActiveView,
+    priorityActionsChecked,
+    togglePriorityAction,
+    displayPredictions,
+    signalsTrackedCount,
+    priorityRows,
+    lastAnalyze,
+  } = useForseen()
   const [expanded, setExpanded] = React.useState(true)
-  const [predictionOpen, setPredictionOpen] = React.useState<Set<number>>(() => new Set(mocks.predictions.map((p) => p.id)))
+  const [predictionOpen, setPredictionOpen] = React.useState<Set<number>>(() => new Set())
+  React.useEffect(() => {
+    setPredictionOpen(new Set(displayPredictions.map((p) => p.id)))
+  }, [displayPredictions])
 
   const togglePrediction = (id: number) => {
     setPredictionOpen((prev) => {
@@ -140,8 +146,13 @@ export function Dashboard() {
           <CardTitle className="text-sm font-light text-neutral-500">Signals tracked</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-3xl font-light tabular-nums">24</p>
+          <p className="text-3xl font-light tabular-nums">{signalsTrackedCount}</p>
           <MockSourcesCaption />
+          {lastAnalyze ? (
+            <p className="mt-2 text-xs text-[color:var(--color-accent)]">Live analysis</p>
+          ) : (
+            <p className="mt-2 text-xs text-neutral-400">Demo count — run analysis in Setup for live signals</p>
+          )}
         </CardContent>
       </Card>
 
@@ -149,7 +160,7 @@ export function Dashboard() {
         <h2 className="mb-4 text-lg font-light tracking-tight">Predictions</h2>
         <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-[color:var(--color-elevated)]">
           <ul className="divide-y divide-neutral-200" role="list">
-            {mocks.predictions.map((p) => {
+            {displayPredictions.map((p) => {
               const isOpen = predictionOpen.has(p.id)
               return (
               <motion.li
@@ -247,7 +258,7 @@ export function Dashboard() {
           <p className="text-sm text-neutral-500">Top Hermes-style tasks for the next sprint.</p>
         </CardHeader>
         <CardContent className="space-y-3">
-          {priorityTeaser.map((a, i) => (
+          {priorityRows.map((a, i) => (
             <label
               key={a.label}
               className="flex cursor-pointer items-start gap-3 rounded-2xl border border-neutral-200/60 bg-[color:var(--color-muted-surface)] p-4 transition-colors hover:bg-neutral-100/80"
