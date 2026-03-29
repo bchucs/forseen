@@ -48,8 +48,11 @@ export function Dashboard() {
     company,
     setDrillPredictionId,
     setActiveView,
+    priorityActionsChecked,
+    togglePriorityAction,
     displayPredictions,
     signalsTrackedCount,
+    priorityRows,
     lastAnalyze,
   } = useForseen()
   const [expanded, setExpanded] = React.useState(true)
