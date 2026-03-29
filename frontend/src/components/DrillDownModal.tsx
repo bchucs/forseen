@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { IconX } from '@/components/icons'
-import type { SignalCard, PrepAction } from '@/data/mocks'
-import { ProbTimeline } from '@/components/ProbTimeline'
+import type { SignalCard } from '@/data/mocks'
 import { cn } from '@/lib/utils'
 import { useForseen } from '@/store/forseen-context'
 
@@ -42,10 +41,6 @@ export function DrillDownModal({ open, predictionId, onOpenChange }: Props) {
             </DialogPrimitive.Close>
           </div>
 
-          <div className="mb-6 rounded-2xl border border-neutral-200/50 bg-[color:var(--color-muted-surface)] p-5">
-            <p className="mb-3 text-xs font-light uppercase tracking-wide text-neutral-500">Probability timeline</p>
-            <ProbTimeline prediction={prediction} />
-          </div>
 
           <Accordion
             key={predictionId}
@@ -104,22 +99,6 @@ export function DrillDownModal({ open, predictionId, onOpenChange }: Props) {
                     <li key={c}>{c}</li>
                   ))}
                 </ul>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="prep">
-              <AccordionTrigger>Prep actions</AccordionTrigger>
-              <AccordionContent>
-                <ol className="space-y-3">
-                  {detail.prepActions.map((a: PrepAction) => (
-                    <li key={a.step} className="flex flex-wrap items-center gap-3 text-sm">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-neutral-200/70 bg-[color:var(--color-muted-surface)] font-mono text-xs">
-                        {a.step}
-                      </span>
-                      <span className="flex-1 text-neutral-800">{a.title}</span>
-                      <Badge variant="secondary">{a.effort} effort</Badge>
-                    </li>
-                  ))}
-                </ol>
               </AccordionContent>
             </AccordionItem>
           </Accordion>

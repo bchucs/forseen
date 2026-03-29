@@ -20,9 +20,7 @@ function MockSourcesCaption() {
   return (
     <p className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-xs leading-relaxed text-neutral-500">
       <span className="inline-flex items-center gap-1">
-        Across
         <span aria-hidden className="text-neutral-400">
-          -&gt;
         </span>
       </span>
       <span className="inline-flex items-center gap-1">
@@ -56,6 +54,7 @@ export function Dashboard() {
     lastAnalyze,
   } = useForseen()
   const [expanded, setExpanded] = React.useState(true)
+  const [priorityExpanded, setPriorityExpanded] = React.useState(true)
   const [predictionOpen, setPredictionOpen] = React.useState<Set<number>>(() => new Set())
   React.useEffect(() => {
     setPredictionOpen(new Set(displayPredictions.map((p) => p.id)))
@@ -148,17 +147,67 @@ export function Dashboard() {
         <CardContent>
           <p className="text-3xl font-light tabular-nums">{signalsTrackedCount}</p>
           <MockSourcesCaption />
-          {lastAnalyze ? (
-            <p className="mt-2 text-xs text-[color:var(--color-accent)]">Live analysis</p>
-          ) : (
+          {!lastAnalyze && (
             <p className="mt-2 text-xs text-neutral-400">Demo count — run analysis in Setup for live signals</p>
           )}
         </CardContent>
       </Card>
 
-      <div>
-        <h2 className="mb-4 text-lg font-light tracking-tight">Predictions</h2>
-        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-[color:var(--color-elevated)]">
+      <motion.section
+        layout
+        className="overflow-hidden rounded-3xl border border-neutral-200/70 bg-[color:var(--color-elevated)] shadow-none"
+      >
+        <button
+          type="button"
+          className="flex w-full items-start justify-between gap-4 p-6 text-left transition-colors hover:bg-neutral-50/80 md:p-7"
+          onClick={() => setPriorityExpanded((e) => !e)}
+        >
+          <div className="min-w-0 space-y-1">
+            <p className="text-base font-medium text-neutral-800">Priority actions</p>
+            <p className="text-sm text-neutral-500">Hermes generated tasks for the next sprint</p>
+          </div>
+          <IconChevronDown
+            className={cn('mt-1 size-5 shrink-0 text-neutral-400 transition-transform', priorityExpanded && 'rotate-180')}
+            aria-hidden
+          />
+        </button>
+        <AnimatePresence initial={false}>
+          {priorityExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="border-t border-neutral-200/60"
+            >
+              <div className="space-y-3 p-6 pt-4 md:p-7 md:pt-4">
+                {priorityRows.map((a, i) => (
+                  <label
+                    key={a.label}
+                    className="flex cursor-pointer items-start gap-3 rounded-2xl border border-neutral-200/60 bg-[color:var(--color-muted-surface)] p-4 transition-colors hover:bg-neutral-100/80"
+                  >
+                    <Checkbox checked={!!priorityActionsChecked[i]} onCheckedChange={() => togglePriorityAction(i)} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-light">{a.label}</span>
+                        <Badge variant={a.level === 'High' ? 'default' : 'secondary'} className="text-[10px]">
+                          {a.level}
+                        </Badge>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.section>
+
+      <Card className="border-neutral-200">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-light tracking-tight">Predictions</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
           <ul className="divide-y divide-neutral-200" role="list">
             {displayPredictions.map((p) => {
               const isOpen = predictionOpen.has(p.id)
@@ -198,10 +247,16 @@ export function Dashboard() {
                         </p>
                       )}
                     </div>
-                    <IconChevronDown
-                      className={cn('mt-0.5 size-5 shrink-0 text-neutral-400 transition-transform', isOpen && 'rotate-180')}
-                      aria-hidden
-                    />
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Button variant="accent" size="sm" className="gap-1" onClick={(e) => { e.stopPropagation(); setDrillPredictionId(p.id) }}>
+                        View reasoning
+                        <IconArrowRight className="size-3.5" aria-hidden />
+                      </Button>
+                      <IconChevronDown
+                        className={cn('size-5 shrink-0 text-neutral-400 transition-transform', isOpen && 'rotate-180')}
+                        aria-hidden
+                      />
+                    </div>
                   </button>
 
                   <AnimatePresence initial={false}>
@@ -233,12 +288,6 @@ export function Dashboard() {
                                 ))}
                               </ul>
                             </div>
-                            <div className="flex shrink-0 flex-wrap gap-2 border-t border-neutral-100 pt-4 lg:flex-col lg:justify-center lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-                              <Button variant="accent" size="sm" className="gap-1" onClick={() => setDrillPredictionId(p.id)}>
-                                View reasoning
-                                <IconArrowRight className="size-3.5" aria-hidden />
-                              </Button>
-                            </div>
                           </div>
                         </div>
                       </motion.div>
@@ -249,33 +298,9 @@ export function Dashboard() {
               )
             })}
           </ul>
-        </div>
-      </div>
-
-      <Card className="border-neutral-200">
-        <CardHeader>
-          <CardTitle className="text-base">Priority actions</CardTitle>
-          <p className="text-sm text-neutral-500">Top Hermes-style tasks for the next sprint.</p>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {priorityRows.map((a, i) => (
-            <label
-              key={a.label}
-              className="flex cursor-pointer items-start gap-3 rounded-2xl border border-neutral-200/60 bg-[color:var(--color-muted-surface)] p-4 transition-colors hover:bg-neutral-100/80"
-            >
-              <Checkbox checked={!!priorityActionsChecked[i]} onCheckedChange={() => togglePriorityAction(i)} />
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-light">{a.label}</span>
-                  <Badge variant={a.level === 'High' ? 'default' : 'secondary'} className="text-[10px]">
-                    {a.level}
-                  </Badge>
-                </div>
-              </div>
-            </label>
-          ))}
         </CardContent>
       </Card>
+
     </div>
   )
 }
