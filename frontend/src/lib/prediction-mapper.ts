@@ -32,24 +32,14 @@ export function apiPredictionToUi(pred: ApiPrediction, id = LIVE_PREDICTION_ID):
   }
 }
 
-export function apiPredictionToDetail(
-  pred: ApiPrediction,
-  signals: Record<string, unknown>[] = [],
-): PredictionDetail {
-  const urlByTitle = new Map<string, string>()
-  for (const s of signals) {
-    const title = typeof s.title === 'string' ? s.title : ''
-    const url = typeof s.source_url === 'string' ? s.source_url : ''
-    if (title && url) urlByTitle.set(title, url)
-  }
-
+export function apiPredictionToDetail(pred: ApiPrediction): PredictionDetail {
   return {
     predictionId: LIVE_PREDICTION_ID,
     k2Reasoning: pred.reasoning,
     signals: pred.key_signals.map((ks) => ({
       title: ks.signal_id,
       summary: ks.rationale,
-      sourceUrl: urlByTitle.get(ks.signal_id) ?? '#',
+      sourceUrl: '#',
       weight: ks.weight.toFixed(2),
     })),
     counterfactors: pred.counterfactors,

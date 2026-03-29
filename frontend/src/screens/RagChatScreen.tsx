@@ -5,16 +5,19 @@ import { IconSend } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { buildCompanyContext, postChat, type ApiChatMessage } from '@/lib/api'
+import { loadRagMessages, saveRagMessages, type RagMessage } from '@/lib/persisted-session'
 import { useForseen } from '@/store/forseen-context'
-
-type ChatMessage = { role: 'user' | 'assistant'; text: string }
 
 export function RagChatScreen() {
   const { company, lastAnalyze } = useForseen()
   const [input, setInput] = React.useState('')
-  const [messages, setMessages] = React.useState<ChatMessage[]>([])
+  const [messages, setMessages] = React.useState<RagMessage[]>(() => loadRagMessages())
   const [sending, setSending] = React.useState(false)
   const listRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    saveRagMessages(messages)
+  }, [messages])
 
   const send = async () => {
     const text = input.trim()
@@ -22,7 +25,7 @@ export function RagChatScreen() {
       toast.message('Type a message to send')
       return
     }
-    const userMsg: ChatMessage = { role: 'user', text }
+    const userMsg: RagMessage = { role: 'user', text }
     setMessages((m) => [...m, userMsg])
     setInput('')
     setSending(true)

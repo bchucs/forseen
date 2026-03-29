@@ -1,8 +1,14 @@
 import * as React from 'react'
 import { toast } from 'sonner'
-import { defaultCompany, type AlertItem, type Company, type Prediction, type PredictionDetail } from '@/data/mocks'
+import { defaultCompany, mocks, type Company, type Prediction, type PredictionDetail } from '@/data/mocks'
 import type { AnalyzeResponse } from '@/lib/api'
 import { postAnalyze } from '@/lib/api'
+import {
+  clearAllPersistedForseen,
+  loadPersistedSession,
+  savePersistedSession,
+  type PersistedSession,
+} from '@/lib/persisted-session'
 import {
   apiPredictionToDetail,
   apiPredictionToUi,
@@ -24,7 +30,6 @@ type ForseenContextValue = {
   loading: boolean
   setLoading: (v: boolean) => void
   refreshMocks: () => void
-  alerts: AlertItem[]
   alertDone: Record<string, boolean>
   toggleAlertDone: (id: string) => void
   markAllAlertsDone: () => void
@@ -44,53 +49,105 @@ type ForseenContextValue = {
   displayPredictions: Prediction[]
   /** Signals count for dashboard card */
   signalsTrackedCount: number
-  /** Priority actions: from Hermes report when available */
+  /** Priority actions: Hermes report when live, else static teaser */
   priorityRows: PriorityRow[]
   getPredictionDetail: (id: number) => PredictionDetail | undefined
 }
 
 const ForseenContext = React.createContext<ForseenContextValue | null>(null)
 
+const defaultPriorityRows: PriorityRow[] = [
+  { label: 'Audit data flows across PHI stores', level: 'High' },
+  { label: 'Refresh BAAs with audit clauses', level: 'High' },
+  { label: 'Publish CDS model cards', level: 'Med' },
+]
+
+function isAppView(v: unknown): v is AppView {
+  return v === 'dashboard' || v === 'rag' || v === 'setup'
+}
+
+function initialFromStorage(): PersistedSession | null {
+  const p = loadPersistedSession()
+  if (!p?.company) return null
+  return {
+    company: { ...p.company },
+    activeView: isAppView(p.activeView) ? p.activeView : 'setup',
+    drillPredictionId: typeof p.drillPredictionId === 'number' || p.drillPredictionId === null ? p.drillPredictionId : null,
+    alertDone: p.alertDone && typeof p.alertDone === 'object' ? { ...p.alertDone } : {},
+    priorityActionsChecked:
+      p.priorityActionsChecked && typeof p.priorityActionsChecked === 'object'
+        ? { ...p.priorityActionsChecked }
+        : { 0: false, 1: false, 2: false },
+    riskTopic: typeof p.riskTopic === 'string' ? p.riskTopic : 'State health data privacy',
+    riskJurisdiction: typeof p.riskJurisdiction === 'string' ? p.riskJurisdiction : 'CA',
+    lastAnalyze: p.lastAnalyze ?? null,
+  }
+}
+
 export function ForseenProvider({ children }: { children: React.ReactNode }) {
-  const [company, setCompany] = React.useState<Company>({ ...defaultCompany })
-  const [activeView, setActiveView] = React.useState<AppView>('setup')
-  const [drillPredictionId, setDrillPredictionId] = React.useState<number | null>(null)
+  const stored = React.useMemo(() => initialFromStorage(), [])
+  const [company, setCompany] = React.useState<Company>(() => stored?.company ?? { ...defaultCompany })
+  const [activeView, setActiveView] = React.useState<AppView>(() => stored?.activeView ?? 'setup')
+  const [drillPredictionId, setDrillPredictionId] = React.useState<number | null>(() => stored?.drillPredictionId ?? null)
   const [loading, setLoading] = React.useState(false)
-  const [alerts, setAlerts] = React.useState<AlertItem[]>([])
-  const [alertDone, setAlertDone] = React.useState<Record<string, boolean>>({})
-  const [priorityActionsChecked, setPriorityActionsChecked] = React.useState<Record<number, boolean>>({})
-  const [riskTopic, setRiskTopic] = React.useState('')
-  const [riskJurisdiction, setRiskJurisdiction] = React.useState('')
-  const [lastAnalyze, setLastAnalyze] = React.useState<AnalyzeResponse | null>(null)
+  const [alertDone, setAlertDone] = React.useState<Record<string, boolean>>(() => stored?.alertDone ?? {})
+  const [priorityActionsChecked, setPriorityActionsChecked] = React.useState<Record<number, boolean>>(
+    () => stored?.priorityActionsChecked ?? { 0: false, 1: false, 2: false },
+  )
+  const [riskTopic, setRiskTopic] = React.useState(() => stored?.riskTopic ?? 'State health data privacy')
+  const [riskJurisdiction, setRiskJurisdiction] = React.useState(() => stored?.riskJurisdiction ?? 'CA')
+  const [lastAnalyze, setLastAnalyze] = React.useState<AnalyzeResponse | null>(() => stored?.lastAnalyze ?? null)
   const [analyzeLoading, setAnalyzeLoading] = React.useState(false)
   const [analyzeError, setAnalyzeError] = React.useState<string | null>(null)
 
+  React.useEffect(() => {
+    savePersistedSession({
+      company,
+      activeView,
+      drillPredictionId,
+      alertDone,
+      priorityActionsChecked,
+      riskTopic,
+      riskJurisdiction,
+      lastAnalyze,
+    })
+  }, [
+    company,
+    activeView,
+    drillPredictionId,
+    alertDone,
+    priorityActionsChecked,
+    riskTopic,
+    riskJurisdiction,
+    lastAnalyze,
+  ])
+
   const liveDetail = React.useMemo(
-    () => (lastAnalyze ? apiPredictionToDetail(lastAnalyze.prediction, lastAnalyze.signals) : undefined),
+    () => (lastAnalyze ? apiPredictionToDetail(lastAnalyze.prediction) : undefined),
     [lastAnalyze],
   )
 
   const displayPredictions = React.useMemo((): Prediction[] => {
     if (lastAnalyze) return [apiPredictionToUi(lastAnalyze.prediction)]
-    return []
+    return mocks.predictions
   }, [lastAnalyze])
 
   const signalsTrackedCount = React.useMemo(() => {
     if (lastAnalyze) return lastAnalyze.signals_used
-    return 0
+    return 24
   }, [lastAnalyze])
 
   const priorityRows = React.useMemo((): PriorityRow[] => {
     if (lastAnalyze?.report?.priority_actions?.length) {
       return priorityActionsFromReport(lastAnalyze.report.priority_actions).slice(0, 8)
     }
-    return []
+    return defaultPriorityRows
   }, [lastAnalyze])
 
   const getPredictionDetail = React.useCallback(
     (id: number): PredictionDetail | undefined => {
       if (lastAnalyze && id === LIVE_PREDICTION_ID) return liveDetail
-      return undefined
+      return mocks.predictionDetails[id as keyof typeof mocks.predictionDetails]
     },
     [lastAnalyze, liveDetail],
   )
@@ -98,10 +155,10 @@ export function ForseenProvider({ children }: { children: React.ReactNode }) {
   const refreshMocks = React.useCallback(() => {
     setLoading(true)
     window.setTimeout(() => {
+      clearAllPersistedForseen()
       setCompany({ ...defaultCompany })
-      setAlerts([])
       setAlertDone({})
-      setPriorityActionsChecked({})
+      setPriorityActionsChecked({ 0: false, 1: false, 2: false })
       setLastAnalyze(null)
       setAnalyzeError(null)
       setLoading(false)
@@ -129,12 +186,9 @@ export function ForseenProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const markAllAlertsDone = React.useCallback(() => {
-    setAlerts((current) => {
-      const next: Record<string, boolean> = {}
-      for (const a of current) next[a.id] = true
-      setAlertDone(next)
-      return current
-    })
+    const next: Record<string, boolean> = {}
+    for (const a of mocks.alerts) next[a.id] = true
+    setAlertDone(next)
   }, [])
 
   const togglePriorityAction = React.useCallback((index: number) => {
@@ -152,7 +206,6 @@ export function ForseenProvider({ children }: { children: React.ReactNode }) {
       loading,
       setLoading,
       refreshMocks,
-      alerts,
       alertDone,
       toggleAlertDone,
       markAllAlertsDone,
@@ -177,7 +230,6 @@ export function ForseenProvider({ children }: { children: React.ReactNode }) {
       drillPredictionId,
       loading,
       refreshMocks,
-      alerts,
       alertDone,
       toggleAlertDone,
       markAllAlertsDone,

@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
 import { IconBell } from '@/components/icons'
 import { cn } from '@/lib/utils'
+import { mocks } from '@/data/mocks'
 import { useForseen } from '@/store/forseen-context'
 
 function effortToPct(e: string): number {
@@ -16,10 +17,11 @@ function effortToPct(e: string): number {
 }
 
 export function AlertsNotificationsPanel() {
-  const { alerts, alertDone, toggleAlertDone, markAllAlertsDone, loading } = useForseen()
+  const { alertDone, toggleAlertDone, markAllAlertsDone, loading } = useForseen()
   const [open, setOpen] = React.useState(false)
   const wrapRef = React.useRef<HTMLDivElement>(null)
 
+  const alerts = mocks.alerts
   const openAlerts = alerts.filter((a) => !alertDone[a.id])
   const openCount = openAlerts.length
 
