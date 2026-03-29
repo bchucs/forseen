@@ -118,12 +118,17 @@ export function AppShell() {
       >
         <div
           className={cn(
-            'flex h-14 shrink-0 items-center border-b border-white/15 px-2',
-            sidebarCollapsed ? 'justify-center' : 'justify-between gap-1',
+            'flex shrink-0 border-b border-white/15 px-2',
+            sidebarCollapsed ? 'h-14 items-center justify-center' : 'min-h-[3.75rem] items-center justify-between gap-1 py-2.5',
           )}
         >
           {!sidebarCollapsed && (
-            <span className="min-w-0 flex-1 truncate px-1 text-sm font-light tracking-tight">Forseen</span>
+            <div className="min-w-0 flex-1 px-1">
+              <span className="block truncate text-sm font-light tracking-tight">Forseen</span>
+              <span className="mt-0.5 block text-[10px] font-light leading-snug text-white/75">
+                your regulatory early-warning system
+              </span>
+            </div>
           )}
           <button
             type="button"
@@ -174,7 +179,12 @@ export function AppShell() {
               </button>
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 sm:gap-x-6">
                 <div className="min-w-0 flex-1 sm:max-w-md md:max-w-lg lg:max-w-xl">
-                  <p className="truncate text-sm font-light tracking-tight sm:hidden">Forseen</p>
+                  <div className="sm:hidden">
+                    <p className="truncate text-sm font-light tracking-tight">Forseen</p>
+                    <p className="mt-0.5 truncate text-[10px] font-light leading-snug text-neutral-500">
+                      your regulatory early-warning system
+                    </p>
+                  </div>
                   <div className="hidden text-left sm:block">
                     <p className="truncate text-sm font-light text-neutral-800">{company.name}</p>
                     <p className="truncate text-[11px] text-neutral-500">
@@ -291,8 +301,13 @@ export function AppShell() {
               transition={{ type: 'spring', damping: 28, stiffness: 320 }}
               className="absolute left-0 top-0 flex h-full w-[min(280px,85vw)] flex-col border-r border-white/10 bg-[color:var(--color-accent)] p-0 text-white shadow-none"
             >
-              <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/15 px-4">
-                <span className="text-sm font-light">Forseen</span>
+              <div className="flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-white/15 px-4 py-2.5">
+                <div className="min-w-0 flex-1">
+                  <span className="block text-sm font-light">Forseen</span>
+                  <span className="mt-0.5 block text-[10px] font-light leading-snug text-white/75">
+                    your regulatory early-warning system
+                  </span>
+                </div>
                 <button
                   type="button"
                   className="inline-flex size-10 items-center justify-center rounded-xl border border-white/20 hover:bg-white/10"

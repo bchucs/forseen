@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { IconPlus, IconSend, IconWrench } from '@/components/icons'
+import { IconSend } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -70,15 +70,7 @@ export function RagChatScreen() {
             }
           }}
         />
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-neutral-100 px-3 py-3">
-          <div className="flex items-center gap-1.5">
-            <Button type="button" variant="secondary" size="icon" className="size-9 shrink-0 rounded-xl border-neutral-200 bg-white" aria-label="Add" onClick={() => toast.message('Attachments (demo)')}>
-              <IconPlus className="size-4" aria-hidden />
-            </Button>
-            <Button type="button" variant="secondary" size="icon" className="size-9 shrink-0 rounded-xl border-neutral-200 bg-white" aria-label="Tools" onClick={() => toast.message('Tools (demo)')}>
-              <IconWrench className="size-4" aria-hidden />
-            </Button>
-          </div>
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-neutral-100 px-3 py-3">
           <Button
             type="button"
             size="icon"
