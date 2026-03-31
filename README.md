@@ -32,7 +32,10 @@ data_ingestion/    Signal pipelines: ingestors, embeddings, dedup, entity extrac
 scripts/           Local dev scripts (run, stop, inspect)
 ```
 ---
-<img width="11583" height="9728" alt="pipeline" src="https://github.com/user-attachments/assets/ff35d197-2f2b-409e-a584-c8e65aaf41d2" />
+<img width="1281" height="660" alt="image" src="https://github.com/user-attachments/assets/dc0a6a00-20a9-446d-8ad3-47f8a205398c" />
+
+---
+
 
 ### Analysis flow
 
