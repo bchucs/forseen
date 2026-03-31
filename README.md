@@ -4,6 +4,8 @@
 
 Forseen transforms a company profile into actionable regulatory insights. Complete a guided onboarding wizard, enter a compliance topic like “health data privacy,” and get live risk predictions, structured compliance reports, and interactive visualizations — all grounded in real regulatory signals from nine federal, state, and third-party sources. A RAG-powered chat interface lets you ask follow-up questions against your analysis and the retrieved documents.
 
+[https://devpost.com/software/foreseen-swlmd5](https://devpost.com/software/foreseen-swlmd5)
+
 ---
 
 ## Features
